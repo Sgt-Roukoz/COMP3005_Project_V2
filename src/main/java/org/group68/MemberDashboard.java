@@ -8,14 +8,16 @@ import java.sql.SQLException;
 public class MemberDashboard extends JFrame {
 
     private Connection databaseConnection;
+
+    //panels
     private JPanel mainPane;
+    private JPanel metricsPanel;
+
+    //metrics icons
     private JLabel hrIcon;
     private JLabel weightIcon;
     private JLabel bpIcon;
-    private JLabel hrLabel;
-    private JLabel weightLabel;
-    private JLabel bpLabel;
-    private JPanel metricsPanel;
+
 
     public MemberDashboard(Connection databaseConnection)
     {
