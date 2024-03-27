@@ -9,13 +9,18 @@ public class MemberDashboard extends JFrame {
 
     private Connection databaseConnection;
     private JPanel mainPane;
+    private JLabel hrIcon;
+    private JLabel weightIcon;
+    private JLabel bpIcon;
     private JLabel hrLabel;
+    private JLabel weightLabel;
+    private JLabel bpLabel;
+    private JPanel metricsPanel;
 
     public MemberDashboard(Connection databaseConnection)
     {
         this.databaseConnection = databaseConnection;
         setTitle("Member Dashboard");
-        hrLabel.setIcon(new ImageIcon("src/main/java/org/group68/Heart-icon.ico"));
         setContentPane(mainPane);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(800, 600);
