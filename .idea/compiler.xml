@@ -12,7 +12,7 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="COMP3005_Project_V2" options="--add-modules java.desktop,java.sql" />
+      <module name="COMP3005_Project_V2" options="" />
     </option>
   </component>
 </project>

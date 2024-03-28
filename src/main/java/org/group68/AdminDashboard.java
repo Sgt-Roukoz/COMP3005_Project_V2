@@ -16,17 +16,34 @@ public class AdminDashboard extends JFrame {
         mainPane = new JPanel();
         setContentPane(mainPane);
         JMenuBar menuBar = new JMenuBar();
-        JMenu room = new JMenu("Room Booking");
-        room.addActionListener(e -> showRoom());
+        JMenu room = new JMenu("Rooms");
+        JMenuItem viewRoom = new JMenuItem("View Room Bookings");
+        viewRoom.addActionListener(e -> showRoom());
+        room.add(viewRoom);
+        JMenuItem bookRoom = new JMenuItem("Book a Room");
+        bookRoom.addActionListener(e -> bookRoom());
+        room.add(bookRoom);
         menuBar.add(room);
         JMenu equipment = new JMenu("Equipment Maintenance");
-        equipment.addActionListener(e -> showEquipment());
+        JMenuItem viewEquipment = new JMenuItem("View Equipment");
+        viewEquipment.addActionListener(e -> showEquipment());
+        equipment.add(viewEquipment);
         menuBar.add(equipment);
-        JMenu classes = new JMenu("Class Schedule");
-        classes.addActionListener(e -> showClasses());
+        JMenu classes = new JMenu("Classes");
+        JMenuItem viewClasses = new JMenuItem("View Classes");
+        viewClasses.addActionListener(e -> showClasses());
+        classes.add(viewClasses);
+        JMenuItem bookClass = new JMenuItem("Book a Class");
+        bookClass.addActionListener(e -> bookClass());
+        classes.add(bookClass);
         menuBar.add(classes);
         JMenu billing = new JMenu("Billing");
-        billing.addActionListener(e -> showBilling());
+        JMenuItem viewBilling = new JMenuItem("View Billing info");
+        viewBilling.addActionListener(e -> showBilling());
+        billing.add(viewBilling);
+        JMenuItem payment = new JMenuItem("Process Payment");
+        payment.addActionListener(e -> processPayment());
+        billing.add(payment);
         menuBar.add(billing);
         this.setJMenuBar(menuBar);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -35,12 +52,20 @@ public class AdminDashboard extends JFrame {
         setVisible(true);
     }
 
-    public static void main(String[] args) {
-        AdminDashboard dashboard = new AdminDashboard();
+    private void processPayment() {
+        System.out.println("process payment");
+    }
+
+    private void bookClass() {
+        System.out.println("book class");
+    }
+
+    private void bookRoom() {
+        System.out.println("book room");
     }
 
     private void showRoom(){
-        System.out.println("room");
+        System.out.println("view room");
     }
 
     private void showEquipment(){
@@ -54,4 +79,10 @@ public class AdminDashboard extends JFrame {
     private void showBilling(){
         System.out.println("billing");
     }
+
+    public static void main(String[] args) {
+        AdminDashboard dashboard = new AdminDashboard();
+    }
+
+
 }
