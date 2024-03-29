@@ -5,6 +5,8 @@ import com.github.weisj.darklaf.theme.DarculaTheme;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -25,11 +27,16 @@ public class MemberDashboard extends JFrame {
     private JButton achievementReset;
     private JButton achievementApply;
     private JTable achievementTable;
+    private JTable table1;
+    private JButton button1;
+    DefaultTableModel achievementmodel;
+    private int memberID;
 
 
-    public MemberDashboard(Connection databaseConnection)
+    public MemberDashboard(Connection databaseConnection, int memberID)
     {
         this.databaseConnection = databaseConnection;
+        this.memberID = memberID;
         // For default theme (IntelliJ)
         // Specify explicit theme.
         LafManager.setTheme(new DarculaTheme());
@@ -42,17 +49,37 @@ public class MemberDashboard extends JFrame {
         setSize(800, 600);
         setLocationRelativeTo(null);
         setVisible(true);
+        achievementApply.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                applyAchievementChanges();
+            }
+        });
+        achievementReset.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                retrieveAchievements();
+            }
+        });
+    }
+
+    private void retrieveAchievements() {
+        int modelSize = achievementmodel.getRowCount();
+        for (int i = 0; i < modelSize; i++)
+        {
+            achievementmodel.removeRow(i);
+        }
     }
 
     private void setUpAchievements()
     {
-        DefaultTableModel achievementmodel = new AchievementModel();
+        achievementmodel = new AchievementModel();
         achievementmodel.addRow(new Object[]{"Testing", false});
         achievementmodel.addRow(new Object[]{"Dump", true});
         achievementmodel.addRow(new Object[]{"Jump", true});
         achievementmodel.addRow(new Object[]{"Buy", false});
         achievementTable.setModel(achievementmodel);
-        achievementTable.getColumnModel().getColumn(0).setPreferredWidth(390);
+        achievementTable.getColumnModel().getColumn(0).setPreferredWidth(250);
         achievementTable.getColumnModel().getColumn(1).setPreferredWidth(10);
         System.out.println(achievementTable.getColumnModel().getColumn(1).getHeaderValue());
 
@@ -93,6 +120,17 @@ public class MemberDashboard extends JFrame {
 
     }
 
+    protected void applyAchievementChanges()
+    {
+        int modelSize = achievementmodel.getRowCount();
+        //"DELETE FROM achievements WHERE member_id = memberID"
+        for (int i = 0; i < modelSize; i++)
+        {
+            //INSERT INTO achievements VALUES(
+            System.out.println(achievementmodel.getValueAt(i, 1));
+        }
+    }
+
     public static void main(String[] args)
     {
 
@@ -109,7 +147,7 @@ public class MemberDashboard extends JFrame {
             e.printStackTrace();
         }
         
-        new MemberDashboard(databaseConnection);
+        new MemberDashboard(databaseConnection, 1);
     }
 
 }
