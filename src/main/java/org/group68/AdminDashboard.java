@@ -5,6 +5,7 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.nio.channels.SelectableChannel;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -12,9 +13,10 @@ import java.sql.SQLException;
 public class AdminDashboard extends JFrame {
 
     private Connection databaseConnection;
-    private databaseEditor editor;
+    private DatabaseEditor editor;
     private JPanel mainPane;
     private JTable mainTable;
+    private DefaultTableModel currentTable;
     private DefaultTableModel roomsTable;
     private DefaultTableModel equipmentTable;
     private DefaultTableModel classesTable;
@@ -22,12 +24,18 @@ public class AdminDashboard extends JFrame {
 
     public AdminDashboard(Connection databaseConnection) {
         this.databaseConnection = databaseConnection;
-        this.editor = new databaseEditor(databaseConnection);
+        this.editor = new DatabaseEditor(databaseConnection);
 
         setTitle("Admin Dashboard");
         mainPane = new JPanel();
         setContentPane(mainPane);
         JMenuBar menuBar = new JMenuBar();
+
+        JMenu file = new JMenu("File");
+        JMenuItem deleteRow = new JMenuItem("Delete Selected Row");
+        deleteRow.addActionListener(e -> deleteRow());
+        file.add(deleteRow);
+        menuBar.add(file);
 
         JMenu room = new JMenu("Rooms");
         JMenuItem viewRoom = new JMenuItem("View Room Bookings");
@@ -72,12 +80,18 @@ public class AdminDashboard extends JFrame {
         classesTable = new DefaultTableModel(new String[] {"class_id", "name", "session_date", "start_time", "frequency", "routines"}, 1);
         billingTable = new DefaultTableModel(new String[] {"bill_id", "bill_type", "value", "date_billed", "bill_paid"}, 1);
 
+        roomsTable.addTableModelListener(editor);
+        equipmentTable.addTableModelListener(editor);
+        classesTable.addTableModelListener(editor);
+        billingTable.addTableModelListener(editor);
+
         //TEST:
         roomsTable.addRow(new String[]{"1", "main", "today", "now", "later"});
         equipmentTable.addRow(new String[] {"1", "treadmill", "yes", "now"});
 
         mainTable = new JTable();
         mainTable.setModel(roomsTable);
+        currentTable = roomsTable;
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setViewportView(mainTable);
 
@@ -97,52 +111,78 @@ public class AdminDashboard extends JFrame {
 
     private void bookClass() {
         System.out.println("book class");
+        JTextField name = new JTextField();
+        JTextField date = new JTextField();
+        JTextField startTime = new JTextField();
+        JTextField endTime = new JTextField();
+        JTextField freq = new JTextField();
+        JTextField routines = new JTextField();
+        Object[] params = {
+                "Class Name: ",  name,
+                "Date: ", date,
+                "Start Time", startTime,
+                "End Time", endTime,
+                "Frequency", freq,
+                "Routines:", routines
+        };
+        int option = JOptionPane.showConfirmDialog(null, params, "Book a Class", JOptionPane.OK_CANCEL_OPTION);
+        if (option == JOptionPane.OK_OPTION) {
+            classesTable.addRow(new String[] {name.getText(), date.getText(), startTime.getText(), endTime.getText(), freq.getText(), routines.getText()});
+        }
     }
 
     private void bookRoom() {
         System.out.println("book room");
+
     }
 
     private void showRoom(){
         System.out.println("view room");
         mainTable.setModel(roomsTable);
+        currentTable = roomsTable;
     }
 
     private void showEquipment(){
         System.out.println("equipment");
         mainTable.setModel(equipmentTable);
+        currentTable = equipmentTable;
     }
 
     private void showClasses(){
         System.out.println("classes");
         mainTable.setModel(classesTable);
+        currentTable = classesTable;
     }
 
     private void showBilling(){
         System.out.println("billing");
         mainTable.setModel(billingTable);
+        currentTable = billingTable;
     }
 
     private void deleteRow(){
-
+        int selected = mainTable.getSelectedRow();
+        System.out.println(selected);
+        if(selected == -1) return;
+        currentTable.removeRow(selected);
     }
 
-    public class databaseEditor implements TableModelListener {
+    public class DatabaseEditor implements TableModelListener {
         private Connection conn;
 
-        public databaseEditor(Connection conn){
+        public DatabaseEditor(Connection conn){
             this.conn = conn;
         }
         @Override
         public void tableChanged(TableModelEvent e) {
             if(e.getType() == TableModelEvent.DELETE) {
-
+                System.out.println("deleted a row");
             }
             else if (e.getType() == TableModelEvent.UPDATE) {
-
+                System.out.println("updated a row");
             }
-            else {
-
+            else if(e.getType() == TableModelEvent.INSERT){
+                System.out.println("inserted a row");
             }
         }
     }
@@ -154,7 +194,7 @@ public class AdminDashboard extends JFrame {
             Class.forName("org.postgresql.Driver");
             String url = "jdbc:postgresql://localhost:5432/Students";
             String user = "postgres";
-            String password = "z3i0";
+            String password = "admin";
             databaseConnection = DriverManager.getConnection(url, user, password);
             if (databaseConnection != null) System.out.println("Connected Successfully");
             else System.out.println("Connection Failed");
