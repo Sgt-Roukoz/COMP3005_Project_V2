@@ -1,12 +1,18 @@
 package org.group68;
 
 import javax.swing.*;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 
 public class AdminDashboard extends JFrame {
 
     private Connection databaseConnection;
+    private databaseEditor editor;
     private JPanel mainPane;
     private JTable mainTable;
     private DefaultTableModel roomsTable;
@@ -14,9 +20,10 @@ public class AdminDashboard extends JFrame {
     private DefaultTableModel classesTable;
     private DefaultTableModel billingTable;
 
-    //TODO: PUT THE DATABASE CONNECTION BACK IN CONSTRUCTOR PARAMS LATER
-    public AdminDashboard() {
+    public AdminDashboard(Connection databaseConnection) {
         this.databaseConnection = databaseConnection;
+        this.editor = new databaseEditor(databaseConnection);
+
         setTitle("Admin Dashboard");
         mainPane = new JPanel();
         setContentPane(mainPane);
@@ -61,17 +68,22 @@ public class AdminDashboard extends JFrame {
         this.setJMenuBar(menuBar);
 
         roomsTable = new DefaultTableModel(new String[] {"room_id", "room_name", "booking_date", "start_time", "end_time"}, 1);
-        //TEST:
-        roomsTable.addRow(new String[]{"1", "main", "today", "now", "later"});
         equipmentTable = new DefaultTableModel(new String[] {"equip_id", "name", "room_booked", "last_inspect"}, 1);
         classesTable = new DefaultTableModel(new String[] {"class_id", "name", "session_date", "start_time", "frequency", "routines"}, 1);
         billingTable = new DefaultTableModel(new String[] {"bill_id", "bill_type", "value", "date_billed", "bill_paid"}, 1);
+
+        //TEST:
+        roomsTable.addRow(new String[]{"1", "main", "today", "now", "later"});
+        equipmentTable.addRow(new String[] {"1", "treadmill", "yes", "now"});
 
         mainTable = new JTable();
         mainTable.setModel(roomsTable);
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setViewportView(mainTable);
-        this.add(scrollPane);
+
+        JPanel panel = new JPanel(new FlowLayout());
+        panel.add(scrollPane);
+        this.add(panel);
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(800, 600);
@@ -93,22 +105,64 @@ public class AdminDashboard extends JFrame {
 
     private void showRoom(){
         System.out.println("view room");
+        mainTable.setModel(roomsTable);
     }
 
     private void showEquipment(){
         System.out.println("equipment");
+        mainTable.setModel(equipmentTable);
     }
 
     private void showClasses(){
         System.out.println("classes");
+        mainTable.setModel(classesTable);
     }
 
     private void showBilling(){
         System.out.println("billing");
+        mainTable.setModel(billingTable);
+    }
+
+    private void deleteRow(){
+
+    }
+
+    public class databaseEditor implements TableModelListener {
+        private Connection conn;
+
+        public databaseEditor(Connection conn){
+            this.conn = conn;
+        }
+        @Override
+        public void tableChanged(TableModelEvent e) {
+            if(e.getType() == TableModelEvent.DELETE) {
+
+            }
+            else if (e.getType() == TableModelEvent.UPDATE) {
+
+            }
+            else {
+
+            }
+        }
     }
 
     public static void main(String[] args) {
-        AdminDashboard dashboard = new AdminDashboard();
+
+        Connection databaseConnection = null;
+        try {
+            Class.forName("org.postgresql.Driver");
+            String url = "jdbc:postgresql://localhost:5432/Students";
+            String user = "postgres";
+            String password = "z3i0";
+            databaseConnection = DriverManager.getConnection(url, user, password);
+            if (databaseConnection != null) System.out.println("Connected Successfully");
+            else System.out.println("Connection Failed");
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        AdminDashboard dashboard = new AdminDashboard(databaseConnection);
     }
 
 
