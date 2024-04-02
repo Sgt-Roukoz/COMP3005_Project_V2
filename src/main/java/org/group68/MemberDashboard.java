@@ -5,12 +5,10 @@ import com.github.weisj.darklaf.theme.DarculaTheme;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.Vector;
+import java.sql.*;
 
 public class MemberDashboard extends JFrame {
 
@@ -29,20 +27,20 @@ public class MemberDashboard extends JFrame {
     private JTable achievementTable;
     private JTable table1;
     private JButton button1;
+    private JTabbedPane dashboardPane;
+    private JTable goaltable;
     DefaultTableModel achievementmodel;
     private int memberID;
 
 
-    public MemberDashboard(Connection databaseConnection, int memberID)
-    {
+    public MemberDashboard(Connection databaseConnection, int memberID) throws UnsupportedLookAndFeelException {
         this.databaseConnection = databaseConnection;
         this.memberID = memberID;
         // For default theme (IntelliJ)
         // Specify explicit theme.
-        LafManager.setTheme(new DarculaTheme());
-        LafManager.install();
+        LafManager.install(new DarculaTheme());
 
-        setUpAchievements();
+        setUpInitialValues();
         setTitle("Member Dashboard");
         setContentPane(mainPane);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -61,23 +59,48 @@ public class MemberDashboard extends JFrame {
                 retrieveAchievements();
             }
         });
+        //LafManager.forceLafUpdate();
+    }
+
+    private void setUpInitialValues(){
+        try
+        {
+            Statement statement = databaseConnection.createStatement();
+            statement.executeQuery("SELECT * FROM metrics WHERE member_id = " + memberID);
+            ResultSet resultSet = statement.getResultSet();
+            resultSet.next();
+            hrIcon.setText(String.valueOf(resultSet.getInt("weight")));
+            hrIcon.setFont(new Font("Jetbrains Mono", Font.BOLD, 15));
+            weightIcon.setText(String.valueOf(resultSet.getInt("resting_hr")));
+            weightIcon.setFont(new Font("Jetbrains Mono", Font.BOLD, 15));
+            bpIcon.setText(String.valueOf(resultSet.getInt("blood_pressure")));
+            bpIcon.setFont(new Font("Jetbrains Mono", Font.BOLD, 15));
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+
+        setUpAchievements();
     }
 
     private void retrieveAchievements() {
-        int modelSize = achievementmodel.getRowCount();
-        for (int i = 0; i < modelSize; i++)
-        {
-            achievementmodel.removeRow(i);
+        try{
+            Statement statement = databaseConnection.createStatement();
+            statement.executeQuery("SELECT * FROM achievements WHERE member_id = " + memberID);
+            ResultSet resultSet = statement.getResultSet();
+            while(resultSet.next())
+            {
+                achievementmodel.addRow(new Object[]{resultSet.getString("description"),
+                        resultSet.getBoolean("achieved"), resultSet.getString("date_achieved")});
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
     private void setUpAchievements()
     {
         achievementmodel = new AchievementModel();
-        achievementmodel.addRow(new Object[]{"Testing", false});
-        achievementmodel.addRow(new Object[]{"Dump", true});
-        achievementmodel.addRow(new Object[]{"Jump", true});
-        achievementmodel.addRow(new Object[]{"Buy", false});
+        retrieveAchievements();
         achievementTable.setModel(achievementmodel);
         achievementTable.getColumnModel().getColumn(0).setPreferredWidth(250);
         achievementTable.getColumnModel().getColumn(1).setPreferredWidth(10);
@@ -88,7 +111,7 @@ public class MemberDashboard extends JFrame {
     public static class AchievementModel extends DefaultTableModel {
 
         public AchievementModel() {
-            super(new String[]{"Achievement", "Achieved"}, 0);
+            super(new String[]{"Achievement", "", "Date Achieved"}, 0);
         }
 
         @Override
@@ -117,27 +140,38 @@ public class MemberDashboard extends JFrame {
                 fireTableCellUpdated(row, column);
             }
         }
-
     }
 
-    protected void applyAchievementChanges()
-    {
-        int modelSize = achievementmodel.getRowCount();
-        //"DELETE FROM achievements WHERE member_id = memberID"
-        for (int i = 0; i < modelSize; i++)
-        {
-            //INSERT INTO achievements VALUES(
-            System.out.println(achievementmodel.getValueAt(i, 1));
+    protected void applyAchievementChanges() {
+        try{
+            Statement statement = databaseConnection.createStatement();
+            int modelSize = achievementmodel.getRowCount();
+            for (int i = 0; i < modelSize; i++) {
+                if (achievementmodel.getValueAt(i, 2) == null)
+                {
+                    boolean achieved = (boolean)achievementmodel.getValueAt(i, 1);
+                    if (achieved)
+                    {
+                        String message = "UPDATE achievements" +
+                        " SET achieved = true, date_achieved = CURRENT_DATE" +
+                        " WHERE member_id = " + memberID + " AND description = '" + achievementmodel.getValueAt(i, 0) + "';";
+                        statement.execute(message);
+                    }
+                }
+                System.out.println(achievementmodel.getValueAt(i, 1));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
+        setUpAchievements();
     }
 
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) throws UnsupportedLookAndFeelException {
 
         Connection databaseConnection = null;
         try {
             Class.forName("org.postgresql.Driver");
-            String url = "jdbc:postgresql://localhost:5432/Students";
+            String url = "jdbc:postgresql://localhost:5432/FitnessClub";
             String user = "postgres";
             String password = "z3i0";
             databaseConnection = DriverManager.getConnection(url, user, password);
