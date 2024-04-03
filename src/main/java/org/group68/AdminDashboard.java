@@ -120,9 +120,9 @@ public class AdminDashboard extends JFrame {
         Object[] params = {
                 "Class Name: ",  name,
                 "Date: ", date,
-                "Start Time", startTime,
-                "End Time", endTime,
-                "Frequency", freq,
+                "Start Time: ", startTime,
+                "End Time: ", endTime,
+                "Frequency: ", freq,
                 "Routines:", routines
         };
         int option = JOptionPane.showConfirmDialog(null, params, "Book a Class", JOptionPane.OK_CANCEL_OPTION);
@@ -133,7 +133,20 @@ public class AdminDashboard extends JFrame {
 
     private void bookRoom() {
         System.out.println("book room");
-
+        JTextField room_id = new JTextField();
+        JTextField date = new JTextField();
+        JTextField startTime = new JTextField();
+        JTextField endTime = new JTextField();
+        Object[] params = {
+                "Room ID: ", room_id,
+                "Booking Date: ", date,
+                "Start Time: " , startTime,
+                "End Time: ", endTime
+        };
+        int option = JOptionPane.showConfirmDialog(null, params, "Book a Room", JOptionPane.OK_CANCEL_OPTION);
+        if (option == JOptionPane.OK_OPTION) {
+            roomsTable.addRow(new String[] {date.getText(), startTime.getText(), endTime.getText()});
+        }
     }
 
     private void showRoom(){
@@ -192,7 +205,7 @@ public class AdminDashboard extends JFrame {
         Connection databaseConnection = null;
         try {
             Class.forName("org.postgresql.Driver");
-            String url = "jdbc:postgresql://localhost:5432/Students";
+            String url = "jdbc:postgresql://localhost:5432/FitnessClubSystem";
             String user = "postgres";
             String password = "admin";
             databaseConnection = DriverManager.getConnection(url, user, password);
