@@ -286,6 +286,15 @@
                       <text value="Button"/>
                     </properties>
                   </component>
+                  <grid id="89d12" layout-manager="GridBagLayout">
+                    <constraints>
+                      <grid row="2" column="0" row-span="1" col-span="3" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                      <gridbag weightx="0.0" weighty="0.2"/>
+                    </constraints>
+                    <properties/>
+                    <border type="etched" title="Bills"/>
+                    <children/>
+                  </grid>
                 </children>
               </grid>
               <grid id="c8f68" layout-manager="GridBagLayout">
@@ -303,25 +312,6 @@
                     <properties/>
                     <border type="none" title="Private Sessions"/>
                     <children>
-                      <grid id="6f9e0" layout-manager="GridBagLayout">
-                        <constraints>
-                          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-                          <gridbag weightx="0.1" weighty="0.1"/>
-                        </constraints>
-                        <properties/>
-                        <border type="etched" title="Upcoming Booked Sessions"/>
-                        <children>
-                          <component id="ae0fb" class="javax.swing.JTable" binding="upcomingSessions">
-                            <constraints>
-                              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
-                                <preferred-size width="150" height="50"/>
-                              </grid>
-                              <gridbag weightx="0.1" weighty="0.1"/>
-                            </constraints>
-                            <properties/>
-                          </component>
-                        </children>
-                      </grid>
                       <grid id="73374" layout-manager="GridBagLayout">
                         <constraints>
                           <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
@@ -329,8 +319,55 @@
                         </constraints>
                         <properties/>
                         <border type="etched" title="Book A Session"/>
-                        <children/>
+                        <children>
+                          <component id="3fb21" class="javax.swing.JComboBox" binding="sessionDaySelector">
+                            <constraints>
+                              <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.0" weighty="0.0"/>
+                            </constraints>
+                            <properties/>
+                          </component>
+                          <component id="bc1a3" class="javax.swing.JLabel">
+                            <constraints>
+                              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.0" weighty="0.0"/>
+                            </constraints>
+                            <properties>
+                              <text value="Session Day"/>
+                            </properties>
+                          </component>
+                          <component id="3728" class="javax.swing.JComboBox" binding="trainerSelector">
+                            <constraints>
+                              <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.0" weighty="0.0"/>
+                            </constraints>
+                            <properties/>
+                          </component>
+                          <component id="8a1d9" class="javax.swing.JLabel">
+                            <constraints>
+                              <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.0" weighty="0.0"/>
+                            </constraints>
+                            <properties>
+                              <text value="Trainer"/>
+                            </properties>
+                          </component>
+                        </children>
                       </grid>
+                      <scrollpane id="7be98">
+                        <constraints>
+                          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                          <gridbag weightx="0.0" weighty="0.1"/>
+                        </constraints>
+                        <properties/>
+                        <border type="etched" title="Upcoming Private Sessions"/>
+                        <children>
+                          <component id="ae0fb" class="javax.swing.JTable" binding="upcomingSessions">
+                            <constraints/>
+                            <properties/>
+                          </component>
+                        </children>
+                      </scrollpane>
                     </children>
                   </grid>
                   <grid id="ebffb" layout-manager="GridBagLayout">
@@ -341,25 +378,6 @@
                     <properties/>
                     <border type="none" title="Group Classes"/>
                     <children>
-                      <grid id="24a8a" layout-manager="GridBagLayout">
-                        <constraints>
-                          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-                          <gridbag weightx="0.1" weighty="0.1"/>
-                        </constraints>
-                        <properties/>
-                        <border type="etched" title="Upcoming Joined Classes"/>
-                        <children>
-                          <component id="d46cc" class="javax.swing.JTable" binding="upcomingClasses">
-                            <constraints>
-                              <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="6" hsize-policy="6" anchor="0" fill="3" indent="0" use-parent-layout="false">
-                                <preferred-size width="150" height="50"/>
-                              </grid>
-                              <gridbag weightx="0.1" weighty="0.1"/>
-                            </constraints>
-                            <properties/>
-                          </component>
-                        </children>
-                      </grid>
                       <grid id="e452d" layout-manager="GridBagLayout">
                         <constraints>
                           <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
@@ -367,8 +385,125 @@
                         </constraints>
                         <properties/>
                         <border type="etched" title="Join A Class"/>
-                        <children/>
+                        <children>
+                          <component id="d1fa6" class="javax.swing.JComboBox" binding="classSelector">
+                            <constraints>
+                              <grid row="1" column="2" row-span="1" col-span="2" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.6" weighty="0.0"/>
+                            </constraints>
+                            <properties>
+                              <name value=""/>
+                            </properties>
+                          </component>
+                          <component id="7b5e2" class="javax.swing.JLabel">
+                            <constraints>
+                              <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.15" weighty="0.0"/>
+                            </constraints>
+                            <properties>
+                              <text value="Available Classes"/>
+                            </properties>
+                          </component>
+                          <hspacer id="66281">
+                            <constraints>
+                              <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.0" weighty="0.0"/>
+                            </constraints>
+                          </hspacer>
+                          <hspacer id="8b2a2">
+                            <constraints>
+                              <grid row="1" column="4" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.0" weighty="0.0"/>
+                            </constraints>
+                          </hspacer>
+                          <component id="f0802" class="javax.swing.JTextField" binding="dateField">
+                            <constraints>
+                              <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                                <preferred-size width="150" height="-1"/>
+                              </grid>
+                              <gridbag weightx="0.1" weighty="0.0"/>
+                            </constraints>
+                            <properties/>
+                          </component>
+                          <component id="6018e" class="javax.swing.JTextField" binding="starttimeField">
+                            <constraints>
+                              <grid row="4" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                                <preferred-size width="150" height="-1"/>
+                              </grid>
+                              <gridbag weightx="0.4" weighty="0.0"/>
+                            </constraints>
+                            <properties/>
+                          </component>
+                          <component id="8a885" class="javax.swing.JTextField" binding="endtimeField">
+                            <constraints>
+                              <grid row="4" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+                                <preferred-size width="150" height="-1"/>
+                              </grid>
+                              <gridbag weightx="0.4" weighty="0.0"/>
+                            </constraints>
+                            <properties/>
+                          </component>
+                          <vspacer id="c8475">
+                            <constraints>
+                              <grid row="0" column="2" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.0" weighty="0.1"/>
+                            </constraints>
+                          </vspacer>
+                          <vspacer id="b4d6d">
+                            <constraints>
+                              <grid row="5" column="2" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.0" weighty="0.1"/>
+                            </constraints>
+                          </vspacer>
+                          <component id="ac899" class="javax.swing.JLabel">
+                            <constraints>
+                              <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="10" fill="0" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.0" weighty="0.0"/>
+                            </constraints>
+                            <properties>
+                              <text value="Date"/>
+                            </properties>
+                          </component>
+                          <component id="41b7" class="javax.swing.JLabel">
+                            <constraints>
+                              <grid row="3" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.0" weighty="0.0"/>
+                            </constraints>
+                            <properties>
+                              <text value="Start Time"/>
+                            </properties>
+                          </component>
+                          <component id="db2cc" class="javax.swing.JLabel">
+                            <constraints>
+                              <grid row="3" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.0" weighty="0.0"/>
+                            </constraints>
+                            <properties>
+                              <text value="End Time"/>
+                            </properties>
+                          </component>
+                          <vspacer id="5f994">
+                            <constraints>
+                              <grid row="2" column="2" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.0" weighty="0.1"/>
+                            </constraints>
+                          </vspacer>
+                        </children>
                       </grid>
+                      <scrollpane id="30a7b">
+                        <constraints>
+                          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                          <gridbag weightx="0.1" weighty="0.1"/>
+                        </constraints>
+                        <properties/>
+                        <border type="etched" title="Upcoming Group Classes"/>
+                        <children>
+                          <component id="d46cc" class="javax.swing.JTable" binding="upcomingClasses">
+                            <constraints/>
+                            <properties/>
+                          </component>
+                        </children>
+                      </scrollpane>
                     </children>
                   </grid>
                 </children>

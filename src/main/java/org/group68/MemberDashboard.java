@@ -4,12 +4,12 @@ import com.github.weisj.darklaf.LafManager;
 import com.github.weisj.darklaf.theme.DarculaTheme;
 
 import javax.swing.*;
-import javax.swing.plaf.nimbus.State;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
+import java.util.*;
 
 public class MemberDashboard extends JFrame {
 
@@ -32,19 +32,32 @@ public class MemberDashboard extends JFrame {
     private JTable goaltable;
     private JButton button2;
     private JButton button3;
+
+    //Schedule Page Variables
     private JTable upcomingClasses;
     private JTable upcomingSessions;
+    private JComboBox<String> classSelector;
+    private JComboBox<String> sessionDaySelector;
+    private JComboBox<String> trainerSelector;
+    private JTextField dateField;
+    private JTextField endtimeField;
+    private JTextField starttimeField;
+    private Map<Integer, GroupClass> availableClasses;
+
+    //models
     private DefaultTableModel classesModel;
     DefaultTableModel achievementmodel, goalmodel;
+
+    //Member Data
     private int memberID;
 
 
     public MemberDashboard(Connection databaseConnection, int memberID) throws UnsupportedLookAndFeelException {
         this.databaseConnection = databaseConnection;
         this.memberID = memberID;
+        availableClasses = new HashMap<>();
         // For default theme (IntelliJ)
         // Specify explicit theme.
-
 
         setUpInitialValues();
         setTitle("Member Dashboard");
@@ -67,7 +80,17 @@ public class MemberDashboard extends JFrame {
                 retrieveAchievements();
             }
         });
-
+        classSelector.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JComboBox<String> cb = (JComboBox<String>) e.getSource();
+                String[] itemSelected = ((String) cb.getSelectedItem()).split(" ");
+                GroupClass selectedClass = availableClasses.get(Integer.valueOf(itemSelected[0]));
+                dateField.setText(selectedClass.date());
+                starttimeField.setText(selectedClass.start_time());
+                endtimeField.setText(selectedClass.end_time());
+            }
+        });
     }
 
     private void setUpInitialValues(){
@@ -92,7 +115,8 @@ public class MemberDashboard extends JFrame {
         setUpSessionsClasses();
     }
 
-    private void setUpSessionsClasses() {
+    @SuppressWarnings("StringTemplateMigration")
+    private void setUpSessionsClassesValues() {
         try
         {
             Statement statement = databaseConnection.createStatement();
@@ -103,9 +127,62 @@ public class MemberDashboard extends JFrame {
                     "SELECT class_name, booking_date, start_time, end_time\n" +
                     "FROM FullClassInfo JOIN ClassMembers ON classmembers.class_id = FullClassInfo.class_id\n" +
                     "WHERE member_id = " + memberID; // query that pulls class info that member has registered in
+            statement.executeQuery(message);
+            ResultSet resultSet = statement.getResultSet();
+            while (resultSet.next())
+            {
+                classesModel.addRow(new Object[]{resultSet.getString("class_name"), resultSet.getString("booking_date"),
+                        resultSet.getString("start_time"), resultSet.getString("end_time")});
+            }
+            statement.close();
+
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+        GetAvailableClasses();
+    }
+
+    private void GetAvailableClasses()
+    {
+        try
+        {
+            Statement statement = databaseConnection.createStatement();
+            String message = "WITH FullClassInfo(class_id, class_name, booking_date, start_time, end_time) AS (\n" +
+                    "    SELECT class_id, class_name, booking_date, start_time, end_time\n" +
+                    "    FROM (groupclasses JOIN roombookings ON groupclasses.room_id = roombookings.room_id)\n" +
+                    ")\n" +
+                    "SELECT FullClassInfo.class_id, class_name, booking_date, start_time, end_time\n" +
+                    "FROM FullClassInfo FULL OUTER JOIN ClassMembers ON classmembers.class_id = FullClassInfo.class_id\n" +
+                    "WHERE member_id IS null OR member_id !=" + memberID; // query that pulls class info that member has NOT registered in
+
+            statement.executeQuery(message);
+            ResultSet resultSet = statement.getResultSet();
+            while (resultSet.next())
+            {
+                GroupClass newClass = new GroupClass(resultSet.getInt("class_id"), resultSet.getString("class_name"),
+                        resultSet.getString("booking_date"), resultSet.getString("start_time"), resultSet.getString("end_time"));
+                availableClasses.put(newClass.id(), newClass);
+                classSelector.addItem(STR."\{newClass.id()} \{newClass.name()}");
+            }
+            statement.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        classSelector.setSelectedIndex(-1);
+
+    }
+
+    private void setUpSessionsClasses() {
+        dateField.setEditable(false);
+        starttimeField.setEditable(false);
+        endtimeField.setEditable(false);
+        classesModel = new DefaultTableModel();
+        classesModel.addColumn("Class Name");
+        classesModel.addColumn("Date");
+        classesModel.addColumn("Start Time");
+        classesModel.addColumn("End Time");
+        upcomingClasses.setModel(classesModel);
+        setUpSessionsClassesValues();
     }
 
     private void retrieveAchievements() {
