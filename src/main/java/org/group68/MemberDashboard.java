@@ -4,6 +4,7 @@ import com.github.weisj.darklaf.LafManager;
 import com.github.weisj.darklaf.theme.DarculaTheme;
 
 import javax.swing.*;
+import javax.swing.plaf.nimbus.State;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -29,7 +30,12 @@ public class MemberDashboard extends JFrame {
     private JButton button1;
     private JTabbedPane dashboardPane;
     private JTable goaltable;
-    DefaultTableModel achievementmodel;
+    private JButton button2;
+    private JButton button3;
+    private JTable upcomingClasses;
+    private JTable upcomingSessions;
+    private DefaultTableModel classesModel;
+    DefaultTableModel achievementmodel, goalmodel;
     private int memberID;
 
 
@@ -38,15 +44,17 @@ public class MemberDashboard extends JFrame {
         this.memberID = memberID;
         // For default theme (IntelliJ)
         // Specify explicit theme.
-        LafManager.install(new DarculaTheme());
+
 
         setUpInitialValues();
         setTitle("Member Dashboard");
         setContentPane(mainPane);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(800, 600);
+        setSize(800, 900);
         setLocationRelativeTo(null);
+        LafManager.install(new DarculaTheme());
         setVisible(true);
+        setResizable(false);
         achievementApply.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -59,7 +67,7 @@ public class MemberDashboard extends JFrame {
                 retrieveAchievements();
             }
         });
-        //LafManager.forceLafUpdate();
+
     }
 
     private void setUpInitialValues(){
@@ -75,11 +83,29 @@ public class MemberDashboard extends JFrame {
             weightIcon.setFont(new Font("Jetbrains Mono", Font.BOLD, 15));
             bpIcon.setText(String.valueOf(resultSet.getInt("blood_pressure")));
             bpIcon.setFont(new Font("Jetbrains Mono", Font.BOLD, 15));
+            statement.close();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
 
         setUpAchievements();
+        setUpSessionsClasses();
+    }
+
+    private void setUpSessionsClasses() {
+        try
+        {
+            Statement statement = databaseConnection.createStatement();
+            String message = "WITH FullClassInfo(class_id, class_name, booking_date, start_time, end_time) AS (\n" +
+                    "\tSELECT class_id, class_name, booking_date, start_time, end_time\n" +
+                    "\tFROM groupclasses JOIN roombookings ON groupclasses.room_id = roombookings.room_id\n" +
+                    ")\n" +
+                    "SELECT class_name, booking_date, start_time, end_time\n" +
+                    "FROM FullClassInfo JOIN ClassMembers ON classmembers.class_id = FullClassInfo.class_id\n" +
+                    "WHERE member_id = " + memberID; // query that pulls class info that member has registered in
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void retrieveAchievements() {
@@ -91,7 +117,10 @@ public class MemberDashboard extends JFrame {
             {
                 achievementmodel.addRow(new Object[]{resultSet.getString("description"),
                         resultSet.getBoolean("achieved"), resultSet.getString("date_achieved")});
+                goalmodel.addRow(new Object[]{resultSet.getString("description"),
+                        resultSet.getBoolean("achieved"), resultSet.getString("date_achieved")});
             }
+            statement.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -100,6 +129,7 @@ public class MemberDashboard extends JFrame {
     private void setUpAchievements()
     {
         achievementmodel = new AchievementModel();
+        goalmodel = new AchievementModel();
         retrieveAchievements();
         achievementTable.setModel(achievementmodel);
         achievementTable.getColumnModel().getColumn(0).setPreferredWidth(250);
@@ -160,9 +190,11 @@ public class MemberDashboard extends JFrame {
                 }
                 System.out.println(achievementmodel.getValueAt(i, 1));
             }
+            statement.close();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+
         setUpAchievements();
     }
 
