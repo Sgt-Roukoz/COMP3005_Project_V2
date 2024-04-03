@@ -6,9 +6,7 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.nio.channels.SelectableChannel;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.*;
 
 public class AdminDashboard extends JFrame {
 
@@ -85,9 +83,29 @@ public class AdminDashboard extends JFrame {
         classesTable.addTableModelListener(editor);
         billingTable.addTableModelListener(editor);
 
-        //TEST:
-        roomsTable.addRow(new String[]{"1", "main", "today", "now", "later"});
-        equipmentTable.addRow(new String[] {"1", "treadmill", "yes", "now"});
+        Statement stmt= null;
+        try {
+            stmt = databaseConnection.createStatement();
+            ResultSet rs=stmt.executeQuery("select * from RoomBookings");
+            while(rs.next()){
+                roomsTable.addRow(new Object[] {rs.getInt(1), rs.getDate(2), rs.getTime(3), rs.getTime(4)});
+            }
+            rs = stmt.executeQuery("select * from GroupClasses");
+            while(rs.next()){
+                classesTable.addRow(new Object[] {rs.getInt(1), rs.getInt(2), rs.getString(3), rs.getInt(4), rs.getInt(5)});
+            }
+            rs = stmt.executeQuery("select * from Equipment");
+            while(rs.next()){
+                equipmentTable.addRow(new Object[] {rs.getInt(1), rs.getString(2), rs.getBoolean(3), rs.getDate(4)});
+            }
+            rs = stmt.executeQuery("select * from Billings");
+            while(rs.next()){
+                billingTable.addRow(new Object[] {rs.getInt(1), rs.getInt(2), rs.getString(3), rs.getString(4), rs.getDate(5), rs.getBoolean(6)});
+            }
+            rs.close();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
 
         mainTable = new JTable();
         mainTable.setModel(roomsTable);
@@ -126,6 +144,8 @@ public class AdminDashboard extends JFrame {
                 "Routines:", routines
         };
         int option = JOptionPane.showConfirmDialog(null, params, "Book a Class", JOptionPane.OK_CANCEL_OPTION);
+
+
         if (option == JOptionPane.OK_OPTION) {
             classesTable.addRow(new String[] {name.getText(), date.getText(), startTime.getText(), endTime.getText(), freq.getText(), routines.getText()});
         }
