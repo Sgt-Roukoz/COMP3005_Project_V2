@@ -6,9 +6,7 @@ import com.github.weisj.darklaf.theme.DarculaTheme;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -103,6 +101,12 @@ public class TrainerDashboard extends JFrame{
     private JLabel email;
     private JLabel name;
     private JLabel timeError;
+    private JLabel nameValue;
+    private JLabel nameOfTrainer;
+    private JLabel trainerPhone;
+    private JLabel phoneNumber;
+    private JLabel trainerEmail;
+    private JLabel emailOfTrainer;
     private int trainerID;
     private Connection databaseConnection;
     private HashMap<Integer, Boolean> daysSelected;
@@ -157,6 +161,16 @@ public class TrainerDashboard extends JFrame{
                 searchButtonPressed(evt);
             }
         });
+
+        try {
+            displayTrainerInfo();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        errorName.setVisible(false);
+        timeError.setVisible(false);
+
     }
 
     private void setDaysSelected(){
@@ -186,6 +200,7 @@ public class TrainerDashboard extends JFrame{
 
         String[] forStartMinutes = startTime.split("(?>:)");
         String startMinute = forStartMinutes[0]; // minutes
+        //Still have to check for whitespace and AM/PM after minutes
         int stmin = Integer.parseInt(startMinute);
 
         String[] forEndHour = endTime.split("(?<=:)");
@@ -202,13 +217,46 @@ public class TrainerDashboard extends JFrame{
         return true;
     }
 
+    private void displayTrainerInfo() throws SQLException{
+        Statement stmt = databaseConnection.createStatement();
+        String SQL = "SELECT email, phone, first_name, last_name FROM GymTrainers WHERE trainer_id = " + trainerID;
+        ResultSet rs = stmt.executeQuery(SQL); // Process the result
+        while(rs.next()){
+            String email = rs.getString("email");
+            String phone = rs.getString("phone");
+            String firstName = rs.getString("first_name");
+            String lastName = rs.getString("last_name");
+
+            nameOfTrainer.setText(firstName + " " + lastName);
+            phoneNumber.setText(phone);
+            emailOfTrainer.setText(email);
+        }
+        rs.close();
+    }
+
+    private void displayTrainerSchedule() throws SQLException {
+        Statement stmt = databaseConnection.createStatement();
+        String SQL = "SELECT available_day, start_time, end_time FROM TrainerAvailability WHERE trainer_id = " + trainerID;
+        ResultSet rs = stmt.executeQuery(SQL); // Process the result
+        while(rs.next()){
+
+            String day = rs.getString("available_day");
+            String start = rs.getString("start_time");
+            String end = rs.getString("end_time");
+
+            //Iterate through table and textfields to display
+
+        }
+
+        rs.close();
+    }
+
     private void searchButtonPressed(ActionEvent evt){
 
     }
 
     public static void main(String[] args) {
         {
-
             Connection databaseConnection = null;
             try {
                 Class.forName("org.postgresql.Driver");
