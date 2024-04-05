@@ -164,6 +164,7 @@ public class TrainerDashboard extends JFrame{
 
         try {
             displayTrainerInfo();
+            displayTrainerSchedule();
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -180,7 +181,19 @@ public class TrainerDashboard extends JFrame{
         }
     }
 
+    private void yeetTableContents(String tobeYeeted) throws SQLException{
+        Statement stmt = databaseConnection.createStatement();
+        String SQL = "DELETE FROM " + tobeYeeted +";";
+        ResultSet rs = stmt.executeQuery(SQL);
+        rs.close();
+    }
+
     private void saveButtonPressed(ActionEvent evt) {
+        try {
+            yeetTableContents("TrainerAvailability");
+        } catch (SQLException e) {
+            timeError.setVisible(true);
+        }
         setDaysSelected();
         for(Map.Entry<Integer, Boolean> entry : daysSelected.entrySet()){
             if(entry.getValue() == true){ //If the corresponding day was ticked
@@ -236,16 +249,48 @@ public class TrainerDashboard extends JFrame{
 
     private void displayTrainerSchedule() throws SQLException {
         Statement stmt = databaseConnection.createStatement();
-        String SQL = "SELECT available_day, start_time, end_time FROM TrainerAvailability WHERE trainer_id = " + trainerID;
+        String SQL = "SELECT available_day, start_time, end_time FROM TrainerAvailability WHERE trainer_id =" + trainerID;
         ResultSet rs = stmt.executeQuery(SQL); // Process the result
         while(rs.next()){
-
-            String day = rs.getString("available_day");
+            Date day = rs.getDate("available_day");
             String start = rs.getString("start_time");
             String end = rs.getString("end_time");
+            rs.close();
 
-            //Iterate through table and textfields to display
-
+            String secondSQL = "SELECT DATENAME(" + day.toString() + ", GETDATE())";
+            ResultSet newRS = stmt.executeQuery(secondSQL);
+            String whichDay = newRS.getString(secondSQL);
+            switch (whichDay) {
+                case "Monday":
+                    monStart.setText(start);
+                    monEnd.setText(end);
+                    break;
+                case "Tuesday":
+                    tuesStart.setText(start);
+                    tuesEnd.setText(end);
+                case "Wednesday":
+                    wedStart.setText(start);
+                    wedEnd.setText(end);
+                    break;
+                case "Thursday":
+                    thursStart.setText(start);
+                    thursEnd.setText(end);
+                    break;
+                case "Friday":
+                    friStart.setText(start);
+                    friEnd.setText(end);
+                    break;
+                case "Saturday":
+                    satStart.setText(start);
+                    satEnd.setText(end);
+                    break;
+                case "Sunday":
+                    sunStart.setText(start);
+                    sunEnd.setText(end);
+                    break;
+                default:
+                    break;
+            }
         }
 
         rs.close();
