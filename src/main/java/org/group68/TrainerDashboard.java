@@ -7,9 +7,13 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.Date;
 
 public class TrainerDashboard extends JFrame{
 
@@ -174,7 +178,7 @@ public class TrainerDashboard extends JFrame{
 
     }
 
-    private void setDaysSelected(){
+    private void checkDaysSelected(){
         daysSelected.clear();
         for(int i = 0; i < daysTicked.size(); i++){
             daysSelected.put(i, daysTicked.get(i).isSelected());
@@ -194,7 +198,7 @@ public class TrainerDashboard extends JFrame{
         } catch (SQLException e) {
             timeError.setVisible(true);
         }
-        setDaysSelected();
+        checkDaysSelected();
         for(Map.Entry<Integer, Boolean> entry : daysSelected.entrySet()){
             if(entry.getValue() == true){ //If the corresponding day was ticked
 
@@ -252,39 +256,43 @@ public class TrainerDashboard extends JFrame{
         String SQL = "SELECT available_day, start_time, end_time FROM TrainerAvailability WHERE trainer_id =" + trainerID;
         ResultSet rs = stmt.executeQuery(SQL); // Process the result
         while(rs.next()){
-            Date day = rs.getDate("available_day");
+            String day = rs.getDate("available_day").toString();
             String start = rs.getString("start_time");
             String end = rs.getString("end_time");
-            rs.close();
 
-            String secondSQL = "SELECT DATENAME(" + day.toString() + ", GETDATE())";
-            ResultSet newRS = stmt.executeQuery(secondSQL);
-            String whichDay = newRS.getString(secondSQL);
-            switch (whichDay) {
-                case "Monday":
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd", Locale.ENGLISH);
+            LocalDate ldate = LocalDate.parse(day, formatter);
+
+            Calendar cal = Calendar.getInstance();
+            Date date = Date.from(ldate.atStartOfDay(ZoneId.systemDefault()).toInstant());
+            cal.setTime(date);
+            int today = cal.get(Calendar.DAY_OF_WEEK);
+
+            switch (today) {
+                case 2:
                     monStart.setText(start);
                     monEnd.setText(end);
                     break;
-                case "Tuesday":
+                case 3:
                     tuesStart.setText(start);
                     tuesEnd.setText(end);
-                case "Wednesday":
+                case 4:
                     wedStart.setText(start);
                     wedEnd.setText(end);
                     break;
-                case "Thursday":
+                case 5:
                     thursStart.setText(start);
                     thursEnd.setText(end);
                     break;
-                case "Friday":
+                case 6:
                     friStart.setText(start);
                     friEnd.setText(end);
                     break;
-                case "Saturday":
+                case 7:
                     satStart.setText(start);
                     satEnd.setText(end);
                     break;
-                case "Sunday":
+                case 1:
                     sunStart.setText(start);
                     sunEnd.setText(end);
                     break;

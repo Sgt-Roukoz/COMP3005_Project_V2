@@ -5,6 +5,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.sql.*;
+import java.time.ZoneId;
 import java.util.Date;
 
 public class LoginPage extends JFrame{
@@ -163,15 +164,16 @@ public class LoginPage extends JFrame{
             String heartRate = restingHR.getText();
             String weighty = weight.getText();
             String pressure = bloodPressure.getText();
-            Date today = new Date();
-            today.setHours(0);
+            Date day = new Date();
+            day.setHours(0);
+            java.sql.Date today = new java.sql.Date(day.getTime());
 
             Statement stmt = connection.createStatement();
             ResultSet rs;
             String SQL;
 
             try {
-                SQL = "INSERT INTO GymMembers (email, member_password FROM MemberLogins WHERE member_username =";
+                SQL = "INSERT INTO GymMembers (email, join_date, phone, first_name, last_name, card_num, pin) VALUES (" + emailInfo + ", " + today + ", " + phoneNum + ", " + fname + ", " + lname + ", " + cardNum + ", " + pinny + ");";
                 rs = stmt.executeQuery(SQL); // Process the result
             }catch (Exception e){
                 error.setVisible(true);
