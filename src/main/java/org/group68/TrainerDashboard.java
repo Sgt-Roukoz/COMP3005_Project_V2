@@ -7,11 +7,11 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.Date;
 
@@ -111,12 +111,9 @@ public class TrainerDashboard extends JFrame{
     private JLabel phoneNumber;
     private JLabel trainerEmail;
     private JLabel emailOfTrainer;
+    private JLabel dataError;
     private int trainerID;
     private Connection databaseConnection;
-    private HashMap<Integer, Boolean> daysSelected;
-    private ArrayList<JComboBox> startCombos;
-    private ArrayList<JComboBox> endCombos;
-    private ArrayList<JCheckBox> daysTicked;
 
     public TrainerDashboard(int trainerID, Connection connection){
         this.trainerID = trainerID;
@@ -125,34 +122,6 @@ public class TrainerDashboard extends JFrame{
         LafManager.setTheme(new DarculaTheme());
         LafManager.install();
 
-        daysSelected = new HashMap<Integer, Boolean>(7);
-
-        startCombos = new ArrayList<>(7);
-        startCombos.add(monStartTime);
-        startCombos.add(tuesStartTime);
-        startCombos.add(wedStartTime);
-        startCombos.add(thursStartTime);
-        startCombos.add(friStartTime);
-        startCombos.add(satStartTime);
-        startCombos.add(sunStartTime);
-
-        endCombos = new ArrayList<>(7);
-        endCombos.add(monEndTime);
-        endCombos.add(tuesEndTime);
-        endCombos.add(wedEndTime);
-        endCombos.add(thursEndTime);
-        endCombos.add(friEndTime);
-        endCombos.add(satEndTime);
-        endCombos.add(sunEndTime);
-
-        daysTicked = new ArrayList<>(7);
-        daysTicked.add(mondayCheckBox);
-        daysTicked.add(tuesdayCheckBox);
-        daysTicked.add(wednesdayCheckBox);
-        daysTicked.add(thursdayCheckBox);
-        daysTicked.add(fridayCheckBox);
-        daysTicked.add(saturdayCheckBox);
-        daysTicked.add(sundayCheckBox);
         saveButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
                 saveButtonPressed(evt);
@@ -175,14 +144,8 @@ public class TrainerDashboard extends JFrame{
 
         errorName.setVisible(false);
         timeError.setVisible(false);
+        dataError.setVisible(false);
 
-    }
-
-    private void checkDaysSelected(){
-        daysSelected.clear();
-        for(int i = 0; i < daysTicked.size(); i++){
-            daysSelected.put(i, daysTicked.get(i).isSelected());
-        }
     }
 
     private void yeetTableContents(String tobeYeeted) throws SQLException{
@@ -197,14 +160,141 @@ public class TrainerDashboard extends JFrame{
             yeetTableContents("TrainerAvailability");
         } catch (SQLException e) {
             timeError.setVisible(true);
+            e.printStackTrace();
         }
-        checkDaysSelected();
-        for(Map.Entry<Integer, Boolean> entry : daysSelected.entrySet()){
-            if(entry.getValue() == true){ //If the corresponding day was ticked
 
+        try {
+            Statement stmt = databaseConnection.createStatement();
+
+            String SQL;
+            ResultSet resultSet;
+
+            if(sundayCheckBox.isSelected()){
+                if (!checkTimeConsistency(sunStartTime, sunEndTime)){
+                    timeError.setVisible(true);
+                }else{
+                    String inputDayOfWeekString = "SUNDAY";
+                    insertTrainerTuple(stmt, inputDayOfWeekString, sunStartTime, sunEndTime);
+                }
             }
+
+            if(mondayCheckBox.isSelected()){
+                if (!checkTimeConsistency(monStartTime, monEndTime)){
+                    timeError.setVisible(true);
+                }else{
+                    String inputDayOfWeekString = "MONDAY";
+                    insertTrainerTuple(stmt, inputDayOfWeekString, monStartTime, monEndTime);
+                }
+            }
+
+            if(tuesdayCheckBox.isSelected()){
+                if (!checkTimeConsistency(tuesStartTime, tuesEndTime)){
+                    timeError.setVisible(true);
+                }else{
+                    String inputDayOfWeekString = "TUESDAY";
+                    insertTrainerTuple(stmt, inputDayOfWeekString, tuesStartTime, tuesEndTime);
+                }
+            }
+
+            if(wednesdayCheckBox.isSelected()){
+                if (!checkTimeConsistency(wedStartTime, wedEndTime)){
+                    timeError.setVisible(true);
+                }else{
+                    String inputDayOfWeekString = "WEDNESDAY";
+                    insertTrainerTuple(stmt, inputDayOfWeekString, wedStartTime, wedEndTime);
+                }
+            }
+
+            if(thursdayCheckBox.isSelected()){
+                if (!checkTimeConsistency(thursStartTime, thursEndTime)){
+                    timeError.setVisible(true);
+                }else{
+                    String inputDayOfWeekString = "THURSDAY";
+                    insertTrainerTuple(stmt, inputDayOfWeekString, thursStartTime, thursEndTime);
+                }
+            }
+
+            if(fridayCheckBox.isSelected()){
+                if (!checkTimeConsistency(friStartTime, friEndTime)){
+                    timeError.setVisible(true);
+                }else{
+                    String inputDayOfWeekString = "FRIDAY";
+                    insertTrainerTuple(stmt, inputDayOfWeekString, friStartTime, friEndTime);
+                }
+            }
+
+            if(saturdayCheckBox.isSelected()){
+                if (!checkTimeConsistency(satStartTime, satEndTime)){
+                    timeError.setVisible(true);
+                }else{
+                    String inputDayOfWeekString = "SATURDAY";
+                    insertTrainerTuple(stmt, inputDayOfWeekString, satStartTime, satEndTime);
+                }
+            }
+
+        }catch (SQLException e){
+            dataError.setVisible(true);
+            e.printStackTrace();
+        }
+        errorName.setVisible(false);
+        timeError.setVisible(false);
+        dataError.setVisible(false);
+    }
+
+    private void insertTrainerTuple(Statement stmt, String inputDayOfWeekString, JComboBox starter, JComboBox ender) throws SQLException {
+        String SQL;
+        String availableDayAttribute = getAvailableDayAttribute(inputDayOfWeekString);
+
+        String startTime = getTimeAttribute(starter);
+
+        String endTime = getTimeAttribute(ender);
+
+        SQL = "INSERT INTO TrainerAvailability (trainer_id, available_day, start_time, end_time) VALUES (" +
+                trainerID + ", " + availableDayAttribute + ", " + startTime + ", " + endTime + ");";
+        ResultSet rs = stmt.executeQuery(SQL);
+        rs.close();
+    }
+
+    private String getTimeAttribute(JComboBox start) {
+        String startTime = start.getSelectedItem().toString();
+
+        String[] forStartHour = startTime.split("(?<=:)");
+        String startHour = forStartHour[0]; // hour
+        int sthr = Integer.parseInt(startHour.replace(':', ' ').trim());
+
+        String[] forStartMinutes = startTime.split("(?>:)");
+        String startMinute = forStartMinutes[0]; // minutes
+        String starter = startMinute.substring(0, 2); //get the minutes from the part after the colon ('## AM' or '## PM')
+        String startM = startMinute.substring(3);
+        int stmin = Integer.parseInt(starter);
+
+        if(startM.equals("PM")){
+            sthr += 12;
         }
 
+        String start_time = sthr + ":" + stmin + ":00";
+
+        return start_time;
+    }
+
+    private String getAvailableDayAttribute(String inputDayOfWeekString) {
+        DayOfWeek inputDayOfWeek = DayOfWeek.valueOf(inputDayOfWeekString);
+        String availableDay;
+        LocalDate today = LocalDate.now();
+        if (today.getDayOfWeek().equals(inputDayOfWeek)) {
+            availableDay = today.toString();
+        } else {
+            LocalDate sameDayNextWeek = today.with(TemporalAdjusters.next(inputDayOfWeek));
+            LocalDate sameDayPreviousWeek = today.with(TemporalAdjusters.previous(inputDayOfWeek));
+            LocalDate dateCloserToToday = (sameDayNextWeek.toEpochDay() - today.toEpochDay()) < (today.toEpochDay() - sameDayPreviousWeek.toEpochDay()) ? sameDayNextWeek : sameDayPreviousWeek;
+            availableDay = dateCloserToToday.toString();
+        }
+        return availableDay;
+    }
+
+    private ArrayList<String> scheduleTuple(String day, JComboBox start, JComboBox end){
+
+        return null;
     }
 
     private boolean checkTimeConsistency(JComboBox start, JComboBox end){
@@ -217,20 +307,35 @@ public class TrainerDashboard extends JFrame{
 
         String[] forStartMinutes = startTime.split("(?>:)");
         String startMinute = forStartMinutes[0]; // minutes
-        //Still have to check for whitespace and AM/PM after minutes
-        int stmin = Integer.parseInt(startMinute);
+        String starter = startMinute.substring(0, 2); //get the minutes from the part after the colon ('## AM' or '## PM')
+        String startM = startMinute.substring(3);
+        int stmin = Integer.parseInt(starter);
 
         String[] forEndHour = endTime.split("(?<=:)");
-        String endHour = forEndHour[0]; // hour
+        String endHour = forEndHour[0];
         int endhr = Integer.parseInt(endHour.replace(':', ' ').trim());
 
         String[] forEndMinutes = startTime.split("(?>:)");
-        String endMinute = forEndMinutes[0]; // minutes
-        int endmin = Integer.parseInt(endMinute);
+        String endMinute = forEndMinutes[0];
+        String ender = endMinute.substring(0, 2);
+        String endM = endMinute.substring(3);
+        int endmin = Integer.parseInt(ender);
 
-        if(sthr > endhr){
+        if(startM.equals(endM)){
+            if(sthr > endhr){
+                return false;
+            } else if (sthr == endhr) {
+                if(stmin >= endmin){
+                    return false;
+                }
+            }
+        } else if (startM.equals("AM") && endM.equals("PM")) {
 
+            return true;
+        }else{
+            return false;
         }
+        
         return true;
     }
 
@@ -269,6 +374,10 @@ public class TrainerDashboard extends JFrame{
             int today = cal.get(Calendar.DAY_OF_WEEK);
 
             switch (today) {
+                case 1:
+                    sunStart.setText(start);
+                    sunEnd.setText(end);
+                    break;
                 case 2:
                     monStart.setText(start);
                     monEnd.setText(end);
@@ -292,10 +401,6 @@ public class TrainerDashboard extends JFrame{
                     satStart.setText(start);
                     satEnd.setText(end);
                     break;
-                case 1:
-                    sunStart.setText(start);
-                    sunEnd.setText(end);
-                    break;
                 default:
                     break;
             }
@@ -305,6 +410,14 @@ public class TrainerDashboard extends JFrame{
     }
 
     private void searchButtonPressed(ActionEvent evt){
+        try{
+            Statement stmt = databaseConnection.createStatement();
+            String SQL = "SELECT available_day, start_time, end_time FROM TrainerAvailability WHERE trainer_id =" + trainerID;
+            ResultSet rs = stmt.executeQuery(SQL); // Process the result
+        }catch (SQLException e){
+            e.printStackTrace();
+            errorName.setVisible(true);
+        }
 
     }
 
