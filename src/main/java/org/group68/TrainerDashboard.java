@@ -94,12 +94,12 @@ public class TrainerDashboard extends JFrame{
     private JTextField emailDisplay;
     private JTextField joinDateDisplay;
     private JTextField phoneDisplay;
-    private JTextField cardNumberDisplay;
-    private JTextField PINDisplay;
+    private JTextField weightDisplay;
+    private JTextField restingHRDisplay;
     private JLabel memberID;
     private JLabel errorName;
-    private JLabel PIN;
-    private JLabel cardNumber;
+    private JLabel restingHR;
+    private JLabel weight;
     private JLabel phone;
     private JLabel joinDate;
     private JLabel email;
@@ -112,6 +112,8 @@ public class TrainerDashboard extends JFrame{
     private JLabel trainerEmail;
     private JLabel emailOfTrainer;
     private JLabel dataError;
+    private JTextField bloodPressureDisplay;
+    private JLabel bp;
     private int trainerID;
     private Connection databaseConnection;
 
@@ -150,7 +152,7 @@ public class TrainerDashboard extends JFrame{
 
     private void yeetTableContents(String tobeYeeted) throws SQLException{
         Statement stmt = databaseConnection.createStatement();
-        String SQL = "DELETE FROM " + tobeYeeted +";";
+        String SQL = "DELETE FROM " + tobeYeeted + " WHERE trainer_id ="+ trainerID +";";
         ResultSet rs = stmt.executeQuery(SQL);
         rs.close();
     }
@@ -292,11 +294,6 @@ public class TrainerDashboard extends JFrame{
         return availableDay;
     }
 
-    private ArrayList<String> scheduleTuple(String day, JComboBox start, JComboBox end){
-
-        return null;
-    }
-
     private boolean checkTimeConsistency(JComboBox start, JComboBox end){
         String startTime = start.getSelectedItem().toString();
         String endTime = end.getSelectedItem().toString();
@@ -410,15 +407,68 @@ public class TrainerDashboard extends JFrame{
     }
 
     private void searchButtonPressed(ActionEvent evt){
+        int memID = displayMemberInfo(memberField.getText());
+        displayMemberMetrics(memID);
+    }
+
+    private int displayMemberInfo(String memberName){
+        String fname = memberName.substring(0, memberName.indexOf(' '));
+        String lname = memberName.substring(memberName.indexOf(' ')).trim();
+
+        Integer memID;
         try{
             Statement stmt = databaseConnection.createStatement();
-            String SQL = "SELECT available_day, start_time, end_time FROM TrainerAvailability WHERE trainer_id =" + trainerID;
+
+            String SQL = "SELECT member_id, email, join_date, phone, first_name, last_name FROM GymMembers WHERE first_name = " + fname + " AND last_name = " + lname;
             ResultSet rs = stmt.executeQuery(SQL); // Process the result
+            Integer member_id = rs.getInt("member_id");
+            memID = member_id;
+            while(rs.next()){
+                String email = rs.getString("email");
+                String joinDate = rs.getDate("join_date").toString();
+                String phone = rs.getString("phone");
+
+                memberIDDisplay.setText(member_id.toString());
+                emailDisplay.setText(email);
+                joinDateDisplay.setText(joinDate);
+                phoneDisplay.setText(phone);
+
+                String firstName = rs.getString("first_name");
+                String lastName = rs.getString("last_name");
+                nameDisplay.setText(firstName + " " + lastName);
+            }
+            rs.close();
+            return memID;
         }catch (SQLException e){
             e.printStackTrace();
             errorName.setVisible(true);
         }
+        return 0;
+    }
 
+    private void displayMemberMetrics(int id){
+        if(id == 0){
+            return;
+        }
+        try{
+            Statement stmt = databaseConnection.createStatement();
+            String SQL = "SELECT member_id, weight, resting_hr, blood_pressure FROM Metrics WHERE member_id = " + id + ";";
+            ResultSet rs = stmt.executeQuery(SQL); // Process the result
+            while(rs.next()){
+                Integer weight = rs.getInt("weight");
+                Integer restingHr = rs.getInt("resting_hr");
+                Integer bloodPressure = rs.getInt("blood_pressure");
+
+                weightDisplay.setText(weight.toString());
+                restingHRDisplay.setText(restingHr.toString());
+                bloodPressureDisplay.setText(bloodPressure.toString());
+
+            }
+            rs.close();
+        }catch (SQLException e){
+            e.printStackTrace();
+            errorName.setVisible(true);
+        }
     }
 
     public static void main(String[] args) {
