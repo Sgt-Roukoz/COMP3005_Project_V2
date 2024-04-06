@@ -12,10 +12,11 @@ CREATE TABLE IF NOT EXISTS GymTrainers (
 );
 
 CREATE TABLE IF NOT EXISTS TrainerAvailability (
-	trainer_id SERIAL PRIMARY KEY,
+	trainer_id INT NOT NULL,
 	available_day DATE NOT NULL,
 	start_time TIME NOT NULL,
-	end_time TIME NOT NULL
+	end_time TIME NOT NULL,
+	FOREIGN KEY (trainer_id) REFERENCES GymTrainers(trainer_id)
 );
 
 CREATE TABLE IF NOT EXISTS GymMembers (

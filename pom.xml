@@ -8,6 +8,22 @@
     <artifactId>COMP3005_Project_V2</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <repositories>
+        <repository>
+            <releases>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+                <checksumPolicy>fail</checksumPolicy>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+            <name>Central</name>
+            <id>central-repo</id>
+            <url>https://repo1.maven.org/maven2/</url>
+            <layout>default</layout>
+        </repository>
+    </repositories>
     <properties>
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
@@ -24,6 +40,11 @@
             <groupId>com.github.weisj</groupId>
             <artifactId>darklaf-core</artifactId>
             <version>3.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>net.time4j</groupId>
+            <artifactId>time4j-range</artifactId>
+            <version>4.38</version>
         </dependency>
     </dependencies>
 </project>
