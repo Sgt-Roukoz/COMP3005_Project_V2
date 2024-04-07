@@ -70,9 +70,7 @@ public class LoginPage extends JFrame{
                     enterRegisterDetails();
                 }catch (SQLException ex){
                     ex.printStackTrace();
-
                 }
-
             }
         });
     }
@@ -193,32 +191,47 @@ public class LoginPage extends JFrame{
 
             java.sql.Date sqlDate = new java.sql.Date(today.getTime());
 
-            try{
-                SQL = "UPDATE WeightAccumulate (weight, date_logged) SET weight = " + weighty + ", date_logged = " + sqlDate + " WHERE member_id = " + newestMemberID + ";";
-                stmt.executeQuery(SQL);
-            }catch (SQLException e){
-                e.printStackTrace();
-                registryFields.setVisible(true);
-            }
+            enterWeight(weighty, stmt, newestMemberID, sqlDate);
 
-            try{
-                SQL = "UPDATE RestingHRAccumulate (resting_hr, date_logged) SET weight = " + heartRate + ", date_logged = " + sqlDate + " WHERE member_id = " + newestMemberID + ";";
-                stmt.executeQuery(SQL);
-            }catch (SQLException e){
-                e.printStackTrace();
-                registryFields.setVisible(true);
-            }
+            enterHeartRate(heartRate, stmt, newestMemberID, sqlDate);
 
-            try{
-                SQL = "UPDATE BloodPRAccumulate (blood_pr, date_logged) SET weight = " + pressure + ", date_logged = " + sqlDate + " WHERE member_id = " + newestMemberID + ";";
-                stmt.executeQuery(SQL);
-            }catch (SQLException e){
-                e.printStackTrace();
-                registryFields.setVisible(true);
-            }
+            enterBloodPressure(pressure, stmt, newestMemberID, sqlDate);
 
         }else{
             invalid.setVisible(true);
+        }
+    }
+
+    private void enterWeight(String weighty, Statement stmt, Integer newestMemberID, java.sql.Date sqlDate) {
+        String SQL;
+        try{
+            SQL = "UPDATE WeightAccumulate (weight, date_logged) SET weight = " + weighty + ", date_logged = " + sqlDate + " WHERE member_id = " + newestMemberID + ";";
+            stmt.executeQuery(SQL);
+        }catch (SQLException e){
+            e.printStackTrace();
+            registryFields.setVisible(true);
+        }
+    }
+
+    private void enterHeartRate(String heartRate, Statement stmt, Integer newestMemberID, java.sql.Date sqlDate) {
+        String SQL;
+        try{
+            SQL = "UPDATE RestingHRAccumulate (resting_hr, date_logged) SET weight = " + heartRate + ", date_logged = " + sqlDate + " WHERE member_id = " + newestMemberID + ";";
+            stmt.executeQuery(SQL);
+        }catch (SQLException e){
+            e.printStackTrace();
+            registryFields.setVisible(true);
+        }
+    }
+
+    private void enterBloodPressure(String pressure, Statement stmt, Integer newestMemberID, java.sql.Date sqlDate) {
+        String SQL;
+        try{
+            SQL = "UPDATE BloodPRAccumulate (blood_pr, date_logged) SET weight = " + pressure + ", date_logged = " + sqlDate + " WHERE member_id = " + newestMemberID + ";";
+            stmt.executeQuery(SQL);
+        }catch (SQLException e){
+            e.printStackTrace();
+            registryFields.setVisible(true);
         }
     }
 
@@ -236,7 +249,6 @@ public class LoginPage extends JFrame{
             e.printStackTrace();
             error.setVisible(true);
         }
-
         return 0;
     }
 
