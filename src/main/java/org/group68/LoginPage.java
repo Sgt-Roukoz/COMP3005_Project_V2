@@ -5,7 +5,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.sql.*;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.ZoneId;
+import java.time.temporal.TemporalAdjusters;
+import java.util.Calendar;
 import java.util.Date;
 
 public class LoginPage extends JFrame{
@@ -39,11 +43,13 @@ public class LoginPage extends JFrame{
     private JLabel weightText;
     private JFormattedTextField email;
     private JLabel invalid;
+    private JLabel registryFields;
     private Connection connection;
     public LoginPage(Connection connection){
         this.connection = connection;
         error.setVisible(false);
         invalid.setVisible(false);
+        registryFields.setVisible(false);
 
         loginButton.addActionListener(new ActionListener() {
             @Override
@@ -52,6 +58,7 @@ public class LoginPage extends JFrame{
                     checkLoginDetails();
                 }catch (SQLException x){
                     x.printStackTrace();
+                    error.setVisible(true);
                 }
             }
         });
@@ -59,6 +66,12 @@ public class LoginPage extends JFrame{
         registerButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                try{
+                    enterRegisterDetails();
+                }catch (SQLException ex){
+                    ex.printStackTrace();
+
+                }
 
             }
         });
@@ -77,7 +90,7 @@ public class LoginPage extends JFrame{
             switch (authority){
                 case "Member":
                     try {
-                        SQL = "SELECT member_id, member_username, member_password FROM MemberLogins WHERE member_username =" + user;
+                        SQL = "SELECT member_id, member_username, member_password FROM MemberLogins WHERE member_username = " + user;
                         rs = stmt.executeQuery(SQL); // Process the result
                     }catch (Exception e){
                         error.setVisible(true);
@@ -99,13 +112,12 @@ public class LoginPage extends JFrame{
                     break;
                 case "Trainer":
                     try {
-                        SQL = "SELECT trainer_id, trainer_username, trainer_password FROM TrainerLogin WHERE trainer_username =" + user;
+                        SQL = "SELECT trainer_id, trainer_username, trainer_password FROM TrainerLogin WHERE trainer_username = " + user;
                         rs = stmt.executeQuery(SQL); // Process the result
                     }catch (Exception e){
                         error.setVisible(true);
                         break;
                     }
-
                     while(rs.next()){
                         int trainerID = rs.getInt("trainer_id");
                         String trainerPassword = rs.getString("trainer_password");
@@ -122,7 +134,7 @@ public class LoginPage extends JFrame{
                     break;
                 case "Administrator":
                     try {
-                        SQL = "SELECT admin_id, admin_username, admin_password FROM AdminLogin WHERE admin_username =" + user;
+                        SQL = "SELECT admin_id, admin_username, admin_password FROM AdminLogin WHERE admin_username = " + user;
                         rs = stmt.executeQuery(SQL); // Process the result
                     }catch (Exception e){
                         error.setVisible(true);
@@ -143,10 +155,8 @@ public class LoginPage extends JFrame{
                     // Close resources
                     rs.close();
                     break;
-
                 default:
                     error.setVisible(true);
-
             }
         }else{
             error.setVisible(true);
@@ -166,22 +176,80 @@ public class LoginPage extends JFrame{
             String pressure = bloodPressure.getText();
             Date day = new Date();
             day.setHours(0);
-            java.sql.Date today = new java.sql.Date(day.getTime());
+            java.sql.Date SQLtoday = new java.sql.Date(day.getTime());
 
             Statement stmt = connection.createStatement();
-            ResultSet rs;
+            createGymMembersTuple(fname, lname, emailInfo, phoneNum, cardNum, pinny, SQLtoday, stmt);
             String SQL;
+            Integer newestMemberID = getNewMemberID(emailInfo, stmt);
 
-            try {
-                SQL = "INSERT INTO GymMembers (email, join_date, phone, first_name, last_name, card_num, pin) VALUES (" + emailInfo + ", " + today + ", " + phoneNum + ", " + fname + ", " + lname + ", " + cardNum + ", " + pinny + ");";
-                rs = stmt.executeQuery(SQL); // Process the result
-            }catch (Exception e){
-                error.setVisible(true);
+            if(newestMemberID == 0){
+                registryFields.setVisible(false);
+                return;
             }
 
+            Date today = new Date();
+            today.setHours(0);
+
+            java.sql.Date sqlDate = new java.sql.Date(today.getTime());
+
+            try{
+                SQL = "UPDATE WeightAccumulate (weight, date_logged) SET weight = " + weighty + ", date_logged = " + sqlDate + " WHERE member_id = " + newestMemberID + ";";
+                stmt.executeQuery(SQL);
+            }catch (SQLException e){
+                e.printStackTrace();
+                registryFields.setVisible(true);
+            }
+
+            try{
+                SQL = "UPDATE RestingHRAccumulate (resting_hr, date_logged) SET weight = " + heartRate + ", date_logged = " + sqlDate + " WHERE member_id = " + newestMemberID + ";";
+                stmt.executeQuery(SQL);
+            }catch (SQLException e){
+                e.printStackTrace();
+                registryFields.setVisible(true);
+            }
+
+            try{
+                SQL = "UPDATE BloodPRAccumulate (blood_pr, date_logged) SET weight = " + pressure + ", date_logged = " + sqlDate + " WHERE member_id = " + newestMemberID + ";";
+                stmt.executeQuery(SQL);
+            }catch (SQLException e){
+                e.printStackTrace();
+                registryFields.setVisible(true);
+            }
 
         }else{
             invalid.setVisible(true);
+        }
+    }
+
+    private Integer getNewMemberID(String emailInfo, Statement stmt) {
+        Integer newestMemberID;
+        try{
+            String secondSQL = "SELECT member_id FROM GymMembers WHERE email = " + emailInfo + ";";
+            ResultSet r = stmt.executeQuery(secondSQL);
+            while(r.next()){
+                newestMemberID = r.getInt("member_id");
+                return newestMemberID;
+            }
+            r.close();
+        }catch (SQLException e){
+            e.printStackTrace();
+            error.setVisible(true);
+        }
+
+        return 0;
+    }
+
+    private void createGymMembersTuple(String fname, String lname, String emailInfo, String phoneNum, String cardNum, String pinny, java.sql.Date today, Statement stmt) {
+        ResultSet rs;
+        String SQL;
+
+        try {
+            SQL = "INSERT INTO GymMembers (email, join_date, phone, first_name, last_name, card_num, pin) VALUES (" + emailInfo + ", " + today + ", " + phoneNum + ", " + fname + ", " + lname + ", " + cardNum + ", " + pinny + ");";
+            rs = stmt.executeQuery(SQL); // Process the result
+        }catch (SQLException e){
+            error.setVisible(true);
+            e.printStackTrace();
         }
     }
 
