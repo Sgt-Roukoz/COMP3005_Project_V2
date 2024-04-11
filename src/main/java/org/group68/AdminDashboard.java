@@ -103,29 +103,57 @@ public class AdminDashboard extends JFrame {
 
     private void processPayment() {
         System.out.println("process payment");
+        JTextField member_id = new JTextField();
+        JTextField bill_type = new JTextField();
+        JTextField value = new JTextField();
+        JTextField date_billed = new JTextField();
+        JCheckBox bill_paid = new JCheckBox();
+        Object[] params = {
+                "Member ID: ", member_id,
+                "Bill Type: ",  bill_type,
+                "Value: ", value,
+                "Date Billed (DD/MM/YYYY): ", date_billed,
+                "Bill Paid: ", bill_paid
+        };
+        int option = JOptionPane.showConfirmDialog(null, params, "Process Payment", JOptionPane.OK_CANCEL_OPTION);
+        if (option == JOptionPane.OK_OPTION) {
+            try {
+                Statement stmt = databaseConnection.createStatement();
+                stmt.executeUpdate("INSERT INTO Billings (member_id, bill_type, bill_value, date_billed, bill_paid) VALUES (" + member_id.getText() + ", " + bill_type.getText() + ", " + value.getText() + ", " + date_billed.getText() + ", " + bill_paid.isSelected() + ");");
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(null, "Invalid Input, please try again.", "Invalid Input", JOptionPane.ERROR_MESSAGE);
+            }
+        }
     }
 
     private void bookClass() {
         System.out.println("book class");
+        JTextField trainer_id = new JTextField();
         JTextField name = new JTextField();
         JTextField date = new JTextField();
         JTextField startTime = new JTextField();
         JTextField endTime = new JTextField();
-        JTextField freq = new JTextField();
-        JTextField routines = new JTextField();
+        JTextField exercise_routine = new JTextField();
+        JTextField room_id = new JTextField();
         Object[] params = {
+                "Trainer ID: ", trainer_id,
                 "Class Name: ",  name,
-                "Date: ", date,
+                "Date (DD/MM/YYYY): ", date,
                 "Start Time: ", startTime,
                 "End Time: ", endTime,
-                "Frequency: ", freq,
-                "Routines:", routines
+                "Exercise Routine: ", exercise_routine,
+                "Room ID: ", room_id
         };
         int option = JOptionPane.showConfirmDialog(null, params, "Book a Class", JOptionPane.OK_CANCEL_OPTION);
-
-
         if (option == JOptionPane.OK_OPTION) {
-            classesTable.addRow(new String[] {name.getText(), date.getText(), startTime.getText(), endTime.getText(), freq.getText(), routines.getText()});
+            try {
+                Statement stmt = databaseConnection.createStatement();
+                stmt.executeUpdate("INSERT INTO GroupClasses (trainer_id,class_name,exercise_routine,room_id) VALUES (" + trainer_id.getText() + ", " + name.getText() + ", " + exercise_routine.getText() + room_id.getText() +  ");");
+                stmt.executeUpdate("INSERT INTO RoomBookings (room_id,booking_date,start_time,end_time) VALUES (" + room_id.getText() + ", " + date.getText() + ", " + startTime.getText() + ", " + endTime.getText() + ");");
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(null, "Invalid Input, please try again.", "Invalid Input", JOptionPane.ERROR_MESSAGE);
+            }
+            showClasses();
         }
     }
 
@@ -137,7 +165,7 @@ public class AdminDashboard extends JFrame {
         JTextField endTime = new JTextField();
         Object[] params = {
                 "Room ID: ", room_id,
-                "Booking Date: ", date,
+                "Booking Date (DD/MM/YYYY): ", date,
                 "Start Time: " , startTime,
                 "End Time: ", endTime
         };
@@ -146,9 +174,9 @@ public class AdminDashboard extends JFrame {
             //roomsTable.addRow(new String[] {date.getText(), startTime.getText(), endTime.getText()});
             try {
                 Statement stmt = databaseConnection.createStatement();
-                stmt.executeUpdate("INSERT INTO Rooms VALUES (" + room_id + ", " + date + ", " + startTime + ", " + endTime + ");");
+                stmt.executeUpdate("INSERT INTO RoomBookings (room_id,booking_date,start_time,end_time) VALUES (" + room_id.getText() + ", " + date.getText() + ", " + startTime.getText() + ", " + endTime.getText() + ");");
             } catch (SQLException e) {
-                throw new RuntimeException(e);
+                JOptionPane.showMessageDialog(null, "Invalid Input, please try again.", "Invalid Input", JOptionPane.ERROR_MESSAGE);;
             }
             showRoom();
         }
@@ -223,8 +251,10 @@ public class AdminDashboard extends JFrame {
         currentTable = billingTable;
     }
 
+    //TODO
     private void deleteRow(){
         int selected = mainTable.getSelectedRow();
+
         System.out.println(selected);
         if(selected == -1) return;
         currentTable.removeRow(selected);
