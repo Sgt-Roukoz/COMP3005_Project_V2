@@ -73,7 +73,7 @@ public class AdminDashboard extends JFrame {
 
         this.setJMenuBar(menuBar);
 
-        roomsTable = new DefaultTableModel(new String[] {"room_id", "room_name", "booking_date", "start_time", "end_time"}, 1);
+        roomsTable = new DefaultTableModel(new String[] {"room_id", "booking_date", "start_time", "end_time"}, 1);
         equipmentTable = new DefaultTableModel(new String[] {"equip_id", "name", "room_booked", "last_inspect"}, 1);
         classesTable = new DefaultTableModel(new String[] {"class_id", "name", "session_date", "start_time", "frequency", "routines"}, 1);
         billingTable = new DefaultTableModel(new String[] {"bill_id", "bill_type", "value", "date_billed", "bill_paid"}, 1);
@@ -82,30 +82,6 @@ public class AdminDashboard extends JFrame {
         equipmentTable.addTableModelListener(editor);
         classesTable.addTableModelListener(editor);
         billingTable.addTableModelListener(editor);
-
-        Statement stmt= null;
-        try {
-            stmt = databaseConnection.createStatement();
-            ResultSet rs=stmt.executeQuery("select * from RoomBookings");
-            while(rs.next()){
-                roomsTable.addRow(new Object[] {rs.getInt(1), rs.getDate(2), rs.getTime(3), rs.getTime(4)});
-            }
-            rs = stmt.executeQuery("select * from GroupClasses");
-            while(rs.next()){
-                classesTable.addRow(new Object[] {rs.getInt(1), rs.getInt(2), rs.getString(3), rs.getInt(4), rs.getInt(5)});
-            }
-            rs = stmt.executeQuery("select * from Equipment");
-            while(rs.next()){
-                equipmentTable.addRow(new Object[] {rs.getInt(1), rs.getString(2), rs.getBoolean(3), rs.getDate(4)});
-            }
-            rs = stmt.executeQuery("select * from Billings");
-            while(rs.next()){
-                billingTable.addRow(new Object[] {rs.getInt(1), rs.getInt(2), rs.getString(3), rs.getString(4), rs.getDate(5), rs.getBoolean(6)});
-            }
-            rs.close();
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
 
         mainTable = new JTable();
         mainTable.setModel(roomsTable);
@@ -116,6 +92,8 @@ public class AdminDashboard extends JFrame {
         JPanel panel = new JPanel(new FlowLayout());
         panel.add(scrollPane);
         this.add(panel);
+
+        showRoom();
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(800, 600);
@@ -165,30 +143,82 @@ public class AdminDashboard extends JFrame {
         };
         int option = JOptionPane.showConfirmDialog(null, params, "Book a Room", JOptionPane.OK_CANCEL_OPTION);
         if (option == JOptionPane.OK_OPTION) {
-            roomsTable.addRow(new String[] {date.getText(), startTime.getText(), endTime.getText()});
+            //roomsTable.addRow(new String[] {date.getText(), startTime.getText(), endTime.getText()});
+            try {
+                Statement stmt = databaseConnection.createStatement();
+                stmt.executeUpdate("INSERT INTO Rooms VALUES (" + room_id + ", " + date + ", " + startTime + ", " + endTime + ");");
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+            showRoom();
         }
     }
 
     private void showRoom(){
         System.out.println("view room");
+        try {
+            roomsTable.setRowCount(0);
+            Statement stmt = databaseConnection.createStatement();
+            ResultSet rs = stmt.executeQuery("select * from RoomBookings");
+            while (rs.next()) {
+                roomsTable.addRow(new Object[]{rs.getInt(1), rs.getDate(2), rs.getTime(3), rs.getTime(4)});
+            }
+            rs.close();
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
         mainTable.setModel(roomsTable);
         currentTable = roomsTable;
     }
 
     private void showEquipment(){
         System.out.println("equipment");
+        try {
+            equipmentTable.setRowCount(0);
+            Statement stmt = databaseConnection.createStatement();
+            ResultSet rs = stmt.executeQuery("select * from Equipment");
+            while(rs.next()){
+                equipmentTable.addRow(new Object[] {rs.getInt(1), rs.getString(2), rs.getBoolean(3), rs.getDate(4)});
+            }
+            rs.close();
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
         mainTable.setModel(equipmentTable);
         currentTable = equipmentTable;
     }
 
     private void showClasses(){
         System.out.println("classes");
+        try {
+            classesTable.setRowCount(0);
+            Statement stmt = databaseConnection.createStatement();
+            ResultSet rs = stmt.executeQuery("select * from GroupClasses");
+            while(rs.next()){
+                classesTable.addRow(new Object[] {rs.getInt(1), rs.getInt(2), rs.getString(3), rs.getInt(4), rs.getInt(5)});
+            }
+            rs.close();
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
         mainTable.setModel(classesTable);
         currentTable = classesTable;
     }
 
     private void showBilling(){
         System.out.println("billing");
+
+        try {
+            billingTable.setRowCount(0);
+            Statement stmt = databaseConnection.createStatement();
+            ResultSet rs = stmt.executeQuery("select * from Billings");
+            while(rs.next()){
+                billingTable.addRow(new Object[] {rs.getInt(1), rs.getInt(2), rs.getString(3), rs.getString(4), rs.getDate(5), rs.getBoolean(6)});
+            }
+            rs.close();
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
         mainTable.setModel(billingTable);
         currentTable = billingTable;
     }
