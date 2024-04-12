@@ -11,7 +11,6 @@ import java.sql.*;
 public class AdminDashboard extends JFrame {
 
     private Connection databaseConnection;
-    private DatabaseEditor editor;
     private JPanel mainPane;
     private JTable mainTable;
     private DefaultTableModel currentTable;
@@ -22,7 +21,6 @@ public class AdminDashboard extends JFrame {
 
     public AdminDashboard(Connection databaseConnection) {
         this.databaseConnection = databaseConnection;
-        this.editor = new DatabaseEditor(databaseConnection);
 
         setTitle("Admin Dashboard");
         mainPane = new JPanel();
@@ -77,11 +75,6 @@ public class AdminDashboard extends JFrame {
         equipmentTable = new DefaultTableModel(new String[] {"equip_id", "name", "room_booked", "last_inspect"}, 0);
         classesTable = new DefaultTableModel(new String[] {"class_id", "trainer_id", "class_name", "exercise_routine", "room_id"}, 0);
         billingTable = new DefaultTableModel(new String[] {"bill_id", "member_id", "bill_type", "bill_value", "date_billed", "bill_paid"}, 0);
-
-        roomsTable.addTableModelListener(editor);
-        equipmentTable.addTableModelListener(editor);
-        classesTable.addTableModelListener(editor);
-        billingTable.addTableModelListener(editor);
 
         mainTable = new JTable();
         mainTable.setModel(roomsTable);
@@ -267,26 +260,6 @@ public class AdminDashboard extends JFrame {
 
         if(selected == -1) return;
         currentTable.removeRow(selected);
-    }
-
-    public class DatabaseEditor implements TableModelListener {
-        private Connection conn;
-
-        public DatabaseEditor(Connection conn){
-            this.conn = conn;
-        }
-        @Override
-        public void tableChanged(TableModelEvent e) {
-            if(e.getType() == TableModelEvent.DELETE) {
-                System.out.println("deleted a row");
-            }
-            else if (e.getType() == TableModelEvent.UPDATE) {
-                System.out.println("updated a row");
-            }
-            else if(e.getType() == TableModelEvent.INSERT){
-                System.out.println("inserted a row");
-            }
-        }
     }
 
     public static void main(String[] args) {
