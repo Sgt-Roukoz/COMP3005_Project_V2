@@ -397,28 +397,112 @@
                               </model>
                             </properties>
                           </component>
-                        </children>
-                      </grid>
-                      <scrollpane id="7be98">
-                        <constraints>
-                          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-                          <gridbag weightx="0.0" weighty="0.1"/>
-                        </constraints>
-                        <properties/>
-                        <border type="etched" title="Upcoming Private Sessions"/>
-                        <children>
-                          <component id="ae0fb" class="javax.swing.JTable" binding="upcomingSessions">
-                            <constraints/>
-                            <properties/>
+                          <component id="75ba7" class="javax.swing.JButton" binding="privateSessionBook">
+                            <constraints>
+                              <grid row="5" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.0" weighty="0.0"/>
+                            </constraints>
+                            <properties>
+                              <text value="Book"/>
+                            </properties>
+                          </component>
+                          <vspacer id="a7e2e">
+                            <constraints>
+                              <grid row="4" column="2" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.0" weighty="0.0"/>
+                            </constraints>
+                          </vspacer>
+                          <component id="52034" class="javax.swing.JLabel">
+                            <constraints>
+                              <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.0" weighty="0.0"/>
+                            </constraints>
+                            <properties>
+                              <text value="Routine"/>
+                            </properties>
+                          </component>
+                          <component id="3bd2c" class="javax.swing.JComboBox" binding="routineSelector">
+                            <constraints>
+                              <grid row="3" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="2" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.0" weighty="0.0"/>
+                            </constraints>
+                            <properties>
+                              <model>
+                                <item value="Strength"/>
+                                <item value="Endurance"/>
+                                <item value="Flexibility"/>
+                                <item value="Balance"/>
+                              </model>
+                            </properties>
                           </component>
                         </children>
-                      </scrollpane>
+                      </grid>
+                      <grid id="f3476" layout-manager="GridBagLayout">
+                        <constraints>
+                          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                          <gridbag weightx="0.15" weighty="0.2"/>
+                        </constraints>
+                        <properties/>
+                        <border type="none"/>
+                        <children>
+                          <scrollpane id="7be98">
+                            <constraints>
+                              <grid row="0" column="0" row-span="1" col-span="5" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.15" weighty="0.1"/>
+                            </constraints>
+                            <properties/>
+                            <border type="etched" title="Upcoming Private Sessions"/>
+                            <children>
+                              <component id="ae0fb" class="javax.swing.JTable" binding="upcomingSessions">
+                                <constraints/>
+                                <properties/>
+                              </component>
+                            </children>
+                          </scrollpane>
+                          <component id="36a13" class="javax.swing.JButton" binding="cancelSession">
+                            <constraints>
+                              <grid row="1" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.1" weighty="0.0"/>
+                            </constraints>
+                            <properties>
+                              <text value="Cancel"/>
+                            </properties>
+                          </component>
+                          <component id="a1c6b" class="javax.swing.JButton" binding="rescheduleSession">
+                            <constraints>
+                              <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.1" weighty="0.0"/>
+                            </constraints>
+                            <properties>
+                              <text value="Reschedule"/>
+                            </properties>
+                          </component>
+                          <hspacer id="e2f60">
+                            <constraints>
+                              <grid row="1" column="4" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.1" weighty="0.0"/>
+                            </constraints>
+                          </hspacer>
+                          <hspacer id="9c28">
+                            <constraints>
+                              <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.1" weighty="0.0"/>
+                            </constraints>
+                          </hspacer>
+                          <hspacer id="69863">
+                            <constraints>
+                              <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.1" weighty="0.0"/>
+                            </constraints>
+                          </hspacer>
+                        </children>
+                      </grid>
                     </children>
                   </grid>
                   <grid id="ebffb" layout-manager="GridBagLayout">
                     <constraints>
                       <grid row="0" column="1" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-                      <gridbag weightx="0.1" weighty="0.1"/>
+                      <gridbag weightx="0.05" weighty="0.1"/>
                     </constraints>
                     <properties/>
                     <border type="none" title="Group Classes"/>
@@ -534,22 +618,134 @@
                               <gridbag weightx="0.0" weighty="0.1"/>
                             </constraints>
                           </vspacer>
+                          <component id="78e14" class="javax.swing.JButton" binding="joinClassButton">
+                            <constraints>
+                              <grid row="5" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.0" weighty="0.0"/>
+                            </constraints>
+                            <properties>
+                              <text value="Join Class"/>
+                            </properties>
+                          </component>
                         </children>
                       </grid>
-                      <scrollpane id="30a7b">
+                      <grid id="7b577" layout-manager="GridBagLayout">
                         <constraints>
-                          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                          <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                          <gridbag weightx="0.1" weighty="0.2"/>
+                        </constraints>
+                        <properties/>
+                        <border type="none"/>
+                        <children>
+                          <scrollpane id="30a7b">
+                            <constraints>
+                              <grid row="0" column="0" row-span="1" col-span="3" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.1" weighty="0.1"/>
+                            </constraints>
+                            <properties/>
+                            <border type="etched" title="Upcoming Group Classes"/>
+                            <children>
+                              <component id="d46cc" class="javax.swing.JTable" binding="upcomingClasses">
+                                <constraints/>
+                                <properties/>
+                              </component>
+                            </children>
+                          </scrollpane>
+                          <component id="fd70b" class="javax.swing.JButton" binding="cancelClass">
+                            <constraints>
+                              <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.0" weighty="0.0"/>
+                            </constraints>
+                            <properties>
+                              <actionCommand value=""/>
+                              <enabled value="false"/>
+                              <label value="Cancel"/>
+                              <text value="Cancel"/>
+                            </properties>
+                          </component>
+                          <hspacer id="1315a">
+                            <constraints>
+                              <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.1" weighty="0.0"/>
+                            </constraints>
+                          </hspacer>
+                          <hspacer id="112a">
+                            <constraints>
+                              <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                              <gridbag weightx="0.1" weighty="0.0"/>
+                            </constraints>
+                          </hspacer>
+                        </children>
+                      </grid>
+                    </children>
+                  </grid>
+                </children>
+              </grid>
+              <grid id="124d7" layout-manager="GridBagLayout">
+                <constraints>
+                  <tabbedpane title="Payment"/>
+                </constraints>
+                <properties/>
+                <border type="none"/>
+                <children>
+                  <grid id="c6eed" layout-manager="GridBagLayout">
+                    <constraints>
+                      <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+                      <gridbag weightx="0.1" weighty="0.1"/>
+                    </constraints>
+                    <properties/>
+                    <border type="none"/>
+                    <children>
+                      <scrollpane id="b8b41">
+                        <constraints>
+                          <grid row="0" column="0" row-span="1" col-span="5" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
                           <gridbag weightx="0.1" weighty="0.1"/>
                         </constraints>
                         <properties/>
-                        <border type="etched" title="Upcoming Group Classes"/>
+                        <border type="none"/>
                         <children>
-                          <component id="d46cc" class="javax.swing.JTable" binding="upcomingClasses">
+                          <component id="aa250" class="javax.swing.JTable" binding="billsTable">
                             <constraints/>
                             <properties/>
                           </component>
                         </children>
                       </scrollpane>
+                      <component id="cc269" class="javax.swing.JButton" binding="cancelBill">
+                        <constraints>
+                          <grid row="1" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                          <gridbag weightx="0.0" weighty="0.0"/>
+                        </constraints>
+                        <properties>
+                          <text value="Button"/>
+                        </properties>
+                      </component>
+                      <component id="3eb3d" class="javax.swing.JButton" binding="payBill">
+                        <constraints>
+                          <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                          <gridbag weightx="0.0" weighty="0.0"/>
+                        </constraints>
+                        <properties>
+                          <text value="Button"/>
+                        </properties>
+                      </component>
+                      <hspacer id="ce960">
+                        <constraints>
+                          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                          <gridbag weightx="0.1" weighty="0.0"/>
+                        </constraints>
+                      </hspacer>
+                      <hspacer id="66a6">
+                        <constraints>
+                          <grid row="1" column="4" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                          <gridbag weightx="0.1" weighty="0.0"/>
+                        </constraints>
+                      </hspacer>
+                      <hspacer id="f6630">
+                        <constraints>
+                          <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+                          <gridbag weightx="0.2" weighty="0.0"/>
+                        </constraints>
+                      </hspacer>
                     </children>
                   </grid>
                 </children>

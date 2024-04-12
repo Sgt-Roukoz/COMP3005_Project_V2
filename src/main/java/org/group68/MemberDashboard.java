@@ -4,12 +4,13 @@ import com.github.weisj.darklaf.LafManager;
 import com.github.weisj.darklaf.theme.DarculaTheme;
 
 import javax.swing.*;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.sql.*;
-import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -17,6 +18,7 @@ import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.List;
 
+import net.time4j.ClockUnit;
 import net.time4j.PlainTime;
 import net.time4j.range.ChronoInterval;
 import net.time4j.range.ClockInterval;
@@ -54,17 +56,25 @@ public class MemberDashboard extends JFrame {
     private JTextField endtimeField;
     private JTextField starttimeField;
     private JComboBox sessionTimeSelector;
+    private JButton privateSessionBook;
+    private JButton cancelSession;
+    private JButton rescheduleSession;
+    private JTable billsTable;
+    private JButton cancelBill;
+    private JButton payBill;
+    private JButton cancelClass;
+    private JButton joinClassButton;
+    private JComboBox routineSelector;
     private Map<Integer, GroupClass> availableClasses;
 
     //models
-    private DefaultTableModel classesModel;
-    DefaultTableModel achievementmodel, goalmodel;
+    private DefaultTableModel classesModel, sessionsModel, achievementmodel, goalmodel;
 
     //Member Data
     private int memberID;
 
 
-    public MemberDashboard(Connection databaseConnection, int memberID) throws UnsupportedLookAndFeelException {
+    public MemberDashboard(Connection databaseConnection, int memberID) {
         this.databaseConnection = databaseConnection;
         this.memberID = memberID;
         sessionTimeSelector.setEnabled(false);
@@ -97,6 +107,7 @@ public class MemberDashboard extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 JComboBox<String> cb = (JComboBox<String>) e.getSource();
+                if (cb == null || cb.getSelectedItem() == null) return;
                 String[] itemSelected = ((String) cb.getSelectedItem()).split(" ");
                 GroupClass selectedClass = availableClasses.get(Integer.valueOf(itemSelected[0]));
                 dateField.setText(selectedClass.date());
@@ -105,20 +116,18 @@ public class MemberDashboard extends JFrame {
             }
         });
 
-        sessionDaySelector.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                JComboBox<String> cb = (JComboBox<String>) e.getSource();
-                String daySelected = (String) cb.getSelectedItem();
-                if (sessionTimeSelector.getSelectedItem() != null)
-                {
-                    sessionTimeSelector.setEnabled(true);
-                    trainerSelector.removeAllItems();
-                    GetAvailableTrainers((String) sessionTimeSelector.getSelectedItem(), daySelected);
-                } else sessionTimeSelector.setEnabled(false);
+        sessionDaySelector.addActionListener(e -> {
+            JComboBox<String> cb = (JComboBox<String>) e.getSource();
+            String daySelected = (String) cb.getSelectedItem();
+            if (sessionTimeSelector.getSelectedItem() != null)
+            {
+                sessionTimeSelector.setEnabled(true);
+                trainerSelector.removeAllItems();
+                GetAvailableTrainers((String) sessionTimeSelector.getSelectedItem(), daySelected);
+            } else sessionTimeSelector.setEnabled(false);
 
-            }
         });
+
         sessionTimeSelector.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -128,13 +137,112 @@ public class MemberDashboard extends JFrame {
                 GetAvailableTrainers(timeSelected, (String) sessionDaySelector.getSelectedItem());
             }
         });
+
+        cancelClass.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int selectedRow = upcomingClasses.getSelectedRow();
+                removeMemberFromClass(Integer.parseInt((String) upcomingClasses.getModel().getValueAt(selectedRow, 0)));
+            }
+        });
+        joinClassButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String[] items = classSelector.getSelectedItem().toString().split(" ");
+
+                joinSelectedClass(Integer.valueOf(items[0]));
+            }
+        });
+
+        privateSessionBook.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                int trainerid = Integer.parseInt(trainerSelector.getSelectedItem().toString().split(" ")[0]);
+                LocalDate day = convertToDate(sessionDaySelector.getSelectedItem().toString());
+                String routine = routineSelector.getSelectedItem().toString();
+                String time = sessionTimeSelector.getSelectedItem().toString();
+                LocalTime start_time = LocalTime.parse(time);
+
+                System.out.println(start_time);
+                bookNewSession(trainerid, routine, day, start_time);
+            }
+        });
     }
 
+    /**
+     * Book new private session with selected trainer within start_time
+     *
+     * @param trainerid trainer to do session with
+     * @param routine the requested routine type
+     * @param day       the date of the session
+     * @param startTime start time of the session
+     */
+    private void bookNewSession(int trainerid, String routine, LocalDate day, LocalTime startTime) {
+        try {
+            Statement bookSession = databaseConnection.createStatement();
+            String bookQuery = "INSERT INTO privatesessions(member_id, trainer_id, set_routine, start_time, session_date)\n" +
+                    "VALUES(" + memberID + ", " + trainerid + ", '" + routine + "' , '" + startTime + "' , '" + day + "')";
+            bookSession.execute(bookQuery);
+            bookSession.close();
+            GetAvailableTrainers(sessionTimeSelector.getSelectedItem().toString(), sessionDaySelector.getSelectedItem().toString());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Lets member join selected class
+     * @param class_id class selected to join
+     */
+    private void joinSelectedClass(Integer class_id) {
+        try {
+            Statement joinClassStatement = databaseConnection.createStatement();
+            String joinMessage = "INSERT INTO classmembers\n" +
+                    "VALUES(" + class_id + ", " + memberID + ")";
+            joinClassStatement.execute(joinMessage);
+            joinClassStatement.close();
+            resetClassSection();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    private void resetClassSection() {
+        setUpSessionsClasses();
+        GetAvailableClasses();
+    }
+
+    /**
+     * Remove member from registered class
+     * @param class_id class to be removed from
+     */
+    private void removeMemberFromClass(int class_id){
+        try {
+            Statement removeClassStatement = databaseConnection.createStatement();
+            String removeMessage = "DELETE FROM classmembers\n" +
+                    "WHERE class_id = " + class_id + " AND member_id = " + memberID;
+            removeClassStatement.execute(removeMessage);
+            removeClassStatement.close();
+            resetClassSection();
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Finds trainers that are available at the selected day and time
+     * @param timeSelected the selected time
+     * @param daySelected the selected day
+     */
     private void GetAvailableTrainers(String timeSelected, String daySelected) {
-        //Statement statement = databaseConnection.createStatement();
+        trainerSelector.removeAllItems();
         LocalDate day = convertToDate(daySelected);
         LocalTime time = LocalTime.parse(timeSelected);
-        Map<Integer, ClockInterval> trainerIntervals = new HashMap<>();
+        Map<Integer, IntervalCollection<PlainTime>> trainerIntervals = new HashMap<>();
+        System.out.println(time);
+        System.out.println(day);
         try {
             //grab trainers that are available during the selected day
             Statement initTrainer = databaseConnection.createStatement();
@@ -143,6 +251,7 @@ public class MemberDashboard extends JFrame {
                     "WHERE available_day = '" + day + "' AND start_time <= '" + time + "' AND end_time >= '" + time.plusHours(1) + "'";
             initTrainer.executeQuery(tmessage);
             ResultSet trainerSet = initTrainer.getResultSet();
+
             while (trainerSet.next())
             {
                 //trainerSelector.addItem(trainerSet.getString("first_name") + " " + trainerSet.getString("last_name"));
@@ -150,38 +259,63 @@ public class MemberDashboard extends JFrame {
                         Integer.parseInt(trainerSet.getString("start_time").split(":")[1]));
                 PlainTime endTime = PlainTime.of(Integer.parseInt(trainerSet.getString("end_time").split(":")[0]),
                         Integer.parseInt(trainerSet.getString("end_time").split(":")[1]));
-                trainerIntervals.put(trainerSet.getInt("trainer_id"), ClockInterval.between(startTime, endTime));
+                trainerIntervals.put(trainerSet.getInt("trainer_id"), IntervalCollection.onClockAxis().plus(ClockInterval.between(startTime, endTime)));
             }
+            System.out.println(trainerIntervals);
             trainerSet.close();
             initTrainer.close();
 
+            //check if trainers have group classes scheduled during this time, and remove that from availability
             Statement taken = databaseConnection.createStatement();
             String takenMessage = "SELECT trainer_id, booking_date, start_time, end_time\n" +
                     "FROM groupclasses JOIN roombookings ON groupclasses.room_id = roombookings.room_id\n" +
-                    "WHERE booking_date = " + day;
+                    "WHERE booking_date = '" + day + "'";
             taken.executeQuery(takenMessage);
             ResultSet takenSet = taken.getResultSet();
             Map<Integer, List<ChronoInterval<PlainTime>>> trainerAvailability = new HashMap<>();
+
             while (takenSet.next())
             {
                 int currentTrainer = takenSet.getInt("trainer_id");
                 if (trainerIntervals.containsKey(currentTrainer))
                 {
-                    PlainTime slotStartTime = PlainTime.of(Integer.parseInt(trainerSet.getString("start_time").split(":")[0]),
-                            Integer.parseInt(trainerSet.getString("start_time").split(":")[1]));
-                    PlainTime slotEndTime = PlainTime.of(Integer.parseInt(trainerSet.getString("end_time").split(":")[0]),
-                            Integer.parseInt(trainerSet.getString("end_time").split(":")[1]));
+                    PlainTime slotStartTime = PlainTime.of(Integer.parseInt(takenSet.getString("start_time").split(":")[0]),
+                            Integer.parseInt(takenSet.getString("start_time").split(":")[1]));
+                    PlainTime slotEndTime = PlainTime.of(Integer.parseInt(takenSet.getString("end_time").split(":")[0]),
+                            Integer.parseInt(takenSet.getString("end_time").split(":")[1]));
                     ClockInterval slot = ClockInterval.between(slotStartTime, slotEndTime);
-                    IntervalCollection<PlainTime> icoll = IntervalCollection.onClockAxis().plus(trainerIntervals.get(currentTrainer));
-                    List<ChronoInterval<PlainTime>> result = icoll.minus(slot).getIntervals();
-
-                    trainerAvailability.put(currentTrainer, result);
+                    trainerIntervals.put(currentTrainer, trainerIntervals.get(currentTrainer).minus(slot));
                 }
             }
 
-            //finally, check if the interval chosen is available
+            Statement sessions = databaseConnection.createStatement();
+            String sessionMessage = "SELECT trainer_id, start_time\n" +
+                    "FROM privatesessions\n" +
+                    "WHERE session_date = '" + day + "'";
+            sessions.executeQuery(sessionMessage);
+            ResultSet sessionSet = sessions.getResultSet();
+            //check if trainers have private sessions during this time
+            while (sessionSet.next())
+            {
+                int currentTrainer = sessionSet.getInt("trainer_id");
+                if (trainerIntervals.containsKey(currentTrainer))
+                {
+                    PlainTime slotStartTime = PlainTime.of(Integer.parseInt(sessionSet.getString("start_time").split(":")[0]),
+                            Integer.parseInt(sessionSet.getString("start_time").split(":")[1]));
+                    PlainTime slotEndTime = slotStartTime.plus(1, ClockUnit.HOURS);
+                    ClockInterval slot = ClockInterval.between(slotStartTime, slotEndTime);
+                    trainerIntervals.put(currentTrainer, trainerIntervals.get(currentTrainer).minus(slot));
+                }
+            }
 
-            ClockInterval chosenTime = ClockInterval.between(time, time.plusHours(1));
+            //generate the availability intervals for each viable trainer
+            trainerIntervals.keySet().forEach(k -> trainerAvailability.putIfAbsent(k, trainerIntervals.get(k).getIntervals()));
+
+            taken.close();
+            takenSet.close();
+
+            //finally, check if chosen session time fits in any intervals of viable trainers
+            ClockInterval chosenTime = ClockInterval.between(time.plusSeconds(1), time.plusMinutes(59).plusSeconds(59));
 
             for (Map.Entry<Integer, List<ChronoInterval<PlainTime>>> entry : trainerAvailability.entrySet())
             {
@@ -189,13 +323,25 @@ public class MemberDashboard extends JFrame {
                 {
                     if (((ClockInterval) interval).encloses(chosenTime))
                     {
-                        //add to combobox
+                        Statement chosenTrainer = databaseConnection.createStatement();
+
+                        String getTrainer = "SELECT first_name, last_name\n" +
+                                "FROM gymtrainers\n" +
+                                "WHERE trainer_id = " + entry.getKey();
+                        chosenTrainer.executeQuery(getTrainer);
+                        ResultSet chosenSet = chosenTrainer.getResultSet();
+                        chosenSet.next();
+
+                        String trainerName = entry.getKey() + " " + chosenSet.getString("first_name") + " " + chosenSet.getString("last_name");
+                        trainerSelector.addItem(trainerName);
+                        chosenSet.close();
+                        chosenTrainer.close();
                     }
                 }
             }
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
         }
 
         //trainers available in those days
@@ -205,6 +351,11 @@ public class MemberDashboard extends JFrame {
         //set trainers in trainerselector
     }
 
+    /**
+     * Convert string Day to the closest week date
+     * @param daySelected selected day as string
+     * @return
+     */
     private LocalDate convertToDate(String daySelected)
     {
         DayOfWeek inputDayOfWeek = DayOfWeek.valueOf(daySelected.toUpperCase());
@@ -213,6 +364,9 @@ public class MemberDashboard extends JFrame {
         return (today.with(TemporalAdjusters.next(inputDayOfWeek)));
     }
 
+    /**
+     * Setting up initial metrics for member dashboard
+     */
     private void setUpInitialValues() {
         try {
             Statement statement = databaseConnection.createStatement();
@@ -234,33 +388,72 @@ public class MemberDashboard extends JFrame {
         setUpSessionsClasses();
     }
 
-    @SuppressWarnings("StringTemplateMigration")
-    private void setUpSessionsClassesValues() {
+    /**
+     * Populates Upcoming Sessions and Upcoming Classes tables
+     */
+    private void setUpClassesValues() {
         try {
-            Statement statement = databaseConnection.createStatement();
+            Statement classesStatement = databaseConnection.createStatement();
             String message = "WITH FullClassInfo(class_id, class_name, booking_date, start_time, end_time) AS (\n" +
                     "\tSELECT class_id, class_name, booking_date, start_time, end_time\n" +
                     "\tFROM groupclasses JOIN roombookings ON groupclasses.room_id = roombookings.room_id\n" +
                     ")\n" +
-                    "SELECT class_name, booking_date, start_time, end_time\n" +
+                    "SELECT FullClassInfo.class_id, class_name, booking_date, start_time, end_time\n" +
                     "FROM FullClassInfo JOIN ClassMembers ON classmembers.class_id = FullClassInfo.class_id\n" +
                     "WHERE member_id = " + memberID; // query that pulls class info that member has registered in
-            statement.executeQuery(message);
-            ResultSet resultSet = statement.getResultSet();
-            while (resultSet.next()) {
-                classesModel.addRow(new Object[]{resultSet.getString("class_name"), resultSet.getString("booking_date"),
-                        resultSet.getString("start_time"), resultSet.getString("end_time")});
+            classesStatement.executeQuery(message);
+            ResultSet classesResultSet = classesStatement.getResultSet();
+            while (classesResultSet.next()) {
+                classesModel.addRow(new Object[]{classesResultSet.getString("class_id"), classesResultSet.getString("class_name"), classesResultSet.getString("booking_date"),
+                        classesResultSet.getString("start_time"), classesResultSet.getString("end_time")});
             }
-            statement.close();
+            classesResultSet.close();
+            classesStatement.close();
 
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+        upcomingSessions.setDefaultEditor(Object.class, null);
         GetAvailableClasses();
+        GetBookedSessions();
     }
 
+    /**
+     * Get upcoming sessions booked by member
+     */
+    private void GetBookedSessions() {
+        sessionsModel.setRowCount(0);
+        try {
+            Statement sessionsStatement = databaseConnection.createStatement();
+            String message = "SELECT * \n" +
+                    "FROM privatesessions JOIN gymtrainers ON privatesessions.trainer_id = gymtrainers.trainer_id\n" +
+                    "WHERE session_date >= CURRENT_DATE AND member_id = " + memberID; // query that pulls class info that member has registered in
+
+            sessionsStatement.executeQuery(message);
+            ResultSet sessionsStatementResultSet = sessionsStatement.getResultSet();
+            while (sessionsStatementResultSet.next()) {
+                sessionsModel.addRow(new Object[]{sessionsStatementResultSet.getString("trainer_id"),
+                        sessionsStatementResultSet.getString("first_name") + " " + sessionsStatementResultSet.getString("last_name"),
+                        sessionsStatementResultSet.getString("set_routine"),
+                        sessionsStatementResultSet.getString("session_date"),
+                        LocalTime.parse(sessionsStatementResultSet.getString("start_time")),
+                        LocalTime.parse(sessionsStatementResultSet.getString("start_time")).plusHours(1)});
+            }
+            sessionsStatementResultSet.close();
+            sessionsStatement.close();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Get classes that will occur later
+     */
     private void GetAvailableClasses() {
         try {
+            availableClasses.clear();
+            classSelector.removeAllItems();
             Statement statement = databaseConnection.createStatement();
             String message = "WITH FullClassInfo(class_id, class_name, booking_date, start_time, end_time) AS (\n" +
                     "    SELECT class_id, class_name, booking_date, start_time, end_time\n" +
@@ -268,7 +461,7 @@ public class MemberDashboard extends JFrame {
                     ")\n" +
                     "SELECT FullClassInfo.class_id, class_name, booking_date, start_time, end_time\n" +
                     "FROM FullClassInfo FULL OUTER JOIN ClassMembers ON classmembers.class_id = FullClassInfo.class_id\n" +
-                    "WHERE member_id IS null OR member_id !=" + memberID; // query that pulls class info that member has NOT registered in
+                    "WHERE (member_id IS null OR member_id !=" + memberID + ") AND booking_date > '" + LocalDate.now() + "'"; // query that pulls class info that member has NOT registered in
 
             statement.executeQuery(message);
             ResultSet resultSet = statement.getResultSet();
@@ -283,7 +476,7 @@ public class MemberDashboard extends JFrame {
             throw new RuntimeException(e);
         }
         classSelector.setSelectedIndex(-1);
-        sessionDaySelector.setSelectedIndex(-1);
+        //sessionDaySelector.setSelectedIndex(-1);
 
     }
 
@@ -292,12 +485,48 @@ public class MemberDashboard extends JFrame {
         starttimeField.setEditable(false);
         endtimeField.setEditable(false);
         classesModel = new DefaultTableModel();
+        sessionsModel = new DefaultTableModel();
+
+        //add columns
+        classesModel.addColumn("ID");
         classesModel.addColumn("Class Name");
         classesModel.addColumn("Date");
         classesModel.addColumn("Start Time");
         classesModel.addColumn("End Time");
+        sessionsModel.addColumn("ID");
+        sessionsModel.addColumn("Trainer");
+        sessionsModel.addColumn("Exercise");
+        sessionsModel.addColumn("Date");
+        sessionsModel.addColumn("Start Time");
+        sessionsModel.addColumn("End Time");
         upcomingClasses.setModel(classesModel);
-        setUpSessionsClassesValues();
+        upcomingSessions.setModel(sessionsModel);
+        upcomingSessions.getColumnModel().removeColumn(upcomingSessions.getColumn("ID"));
+        upcomingClasses.getColumnModel().removeColumn(upcomingClasses.getColumn("ID"));
+
+        JTextField tf = new JTextField();
+        tf.setEditable(false);
+        DefaultCellEditor editor = new DefaultCellEditor( tf );
+        upcomingClasses.setDefaultEditor(Object.class, editor);
+
+        //upcomingClasses.c
+
+        upcomingClasses.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                cancelClass.setEnabled(!upcomingClasses.getSelectionModel().isSelectionEmpty());
+            }
+        });
+
+        upcomingSessions.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+                cancelSession.setEnabled(!upcomingSessions.getSelectionModel().isSelectionEmpty());
+            }
+        });
+
+        setUpClassesValues();
+        //setUpSessionsValues();
     }
 
     private void retrieveAchievements() {
@@ -317,6 +546,9 @@ public class MemberDashboard extends JFrame {
         }
     }
 
+    /**
+     * Populates achievement table
+     */
     private void setUpAchievements() {
         achievementmodel = new AchievementModel();
         goalmodel = new AchievementModel();
@@ -386,7 +618,7 @@ public class MemberDashboard extends JFrame {
         setUpAchievements();
     }
 
-    public static void main(String[] args) throws UnsupportedLookAndFeelException {
+    public static void main(String[] args) {
 
         Connection databaseConnection = null;
         try {
