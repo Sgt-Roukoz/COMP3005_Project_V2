@@ -47,6 +47,10 @@ public class AdminDashboard extends JFrame {
         JMenuItem viewEquipment = new JMenuItem("View Equipment");
         viewEquipment.addActionListener(e -> showEquipment());
         equipment.add(viewEquipment);
+
+        JMenuItem addEquipment = new JMenuItem("Register Equipment");
+        addEquipment.addActionListener(e-> addEquipment());
+        equipment.add(addEquipment);
         menuBar.add(equipment);
 
         JMenu classes = new JMenu("Classes");
@@ -72,7 +76,7 @@ public class AdminDashboard extends JFrame {
         this.setJMenuBar(menuBar);
 
         roomsTable = new DefaultTableModel(new String[] {"room_id", "booking_date", "start_time", "end_time"}, 0);
-        equipmentTable = new DefaultTableModel(new String[] {"equip_id", "name", "room_booked", "last_inspect"}, 0);
+        equipmentTable = new DefaultTableModel(new String[] {"equip_id", "name", "room", "last_inspect"}, 0);
         classesTable = new DefaultTableModel(new String[] {"class_id", "trainer_id", "class_name", "exercise_routine", "room_id"}, 0);
         billingTable = new DefaultTableModel(new String[] {"bill_id", "member_id", "bill_type", "bill_value", "date_billed", "bill_paid"}, 0);
 
@@ -92,6 +96,29 @@ public class AdminDashboard extends JFrame {
         setSize(800, 600);
         setLocationRelativeTo(null);
         setVisible(true);
+    }
+
+    private void addEquipment() {
+        System.out.println("add equipment");
+        JTextField name = new JTextField();
+        JTextField room_id = new JTextField();
+        JTextField last_inspected = new JTextField();
+        Object[] params = {
+                "Equipment Name: ", name,
+                "Room ID: ", room_id,
+                "Last Inspected (YYYY-MM-DD): ", last_inspected
+        };
+        int option = JOptionPane.showConfirmDialog(null, params, "Register Equipment", JOptionPane.OK_CANCEL_OPTION);
+        if (option == JOptionPane.OK_OPTION) {
+            try {
+                Statement stmt = databaseConnection.createStatement();
+                stmt.executeUpdate("INSERT INTO equipment (equip_name, room, last_inspect) VALUES ('" + name.getText() + "', " + room_id.getText() + ", '" + last_inspected.getText() + "');");
+            } catch (SQLException e) {
+                JOptionPane.showMessageDialog(null, "Invalid Input, please try again.", "Invalid Input", JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
+            showEquipment();
+        }
     }
 
     private void processPayment() {
@@ -205,7 +232,7 @@ public class AdminDashboard extends JFrame {
             Statement stmt = databaseConnection.createStatement();
             ResultSet rs = stmt.executeQuery("select * from Equipment");
             while(rs.next()){
-                equipmentTable.addRow(new Object[] {rs.getInt(1), rs.getString(2), rs.getBoolean(3), rs.getDate(4)});
+                equipmentTable.addRow(new Object[] {rs.getInt(1), rs.getString(2), rs.getInt(3), rs.getDate(4)});
             }
             rs.close();
         } catch (SQLException e){
@@ -254,12 +281,35 @@ public class AdminDashboard extends JFrame {
     private void deleteRow(){
         int selected = mainTable.getSelectedRow();
         System.out.println(selected);
-        if(currentTable == equipmentTable || currentTable == billingTable) {
+        Statement stmt;
+        if(currentTable == equipmentTable || currentTable == billingTable || currentTable == classesTable) {
             int id = (Integer) mainTable.getValueAt(selected, 0);
+            try {
+                stmt = databaseConnection.createStatement();
+                if (currentTable == equipmentTable) {
+                    stmt.executeUpdate("DELETE FROM equipment WHERE equip_id = " + id + ";");
+                    showEquipment();
+                }
+                else if (currentTable == billingTable) {
+                    stmt.executeUpdate("DELETE FROM billings WHERE bill_id = " + id + ";");
+                    showBilling();
+                }
+                else {
+                    stmt.executeUpdate("DELETE FROM groupclasses WHERE class_id = " + id + ";");
+                    showClasses();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
-
-        if(selected == -1) return;
-        currentTable.removeRow(selected);
+        else {
+            try {
+                stmt = databaseConnection.createStatement();
+                stmt.executeUpdate("DELETE FROM roombookings WHERE room_id = " + mainTable.getValueAt(selected, 0) + " AND booking_date = " + mainTable.getValueAt(selected, 1) + " AND start_time = " + mainTable.getValueAt(selected, 2) + ";");
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public static void main(String[] args) {
