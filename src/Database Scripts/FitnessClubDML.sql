@@ -1,8 +1,12 @@
+INSERT INTO memberlogins
+VALUES(1, 'epicuser', 'coolpassword');
+
 INSERT INTO groupclasses(trainer_id, class_name, exercise_routine, room_id)
 VALUES(2, 'Secondary Class', 2, 1);
 
 INSERT INTO RoomBookings
 VALUES(1, '2024-04-21', '19:00', '23:00');
+
 
 INSERT INTO groupclasses(trainer_id, class_name, exercise_routine, room_id)
 VALUES(1, 'YDK Strength by Jim Bob', 2, 2);

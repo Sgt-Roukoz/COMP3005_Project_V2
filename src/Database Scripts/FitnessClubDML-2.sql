@@ -9,7 +9,7 @@ VALUES ('South Room'),
 ('West Room');
 
 INSERT INTO gymmembers(email, join_date, phone, first_name, last_name, card_num, pin)
-VALUES ('anemail', '2024-02-04', '912-222-3333', 'AName', 'BName', '1111111111', '324');
+VALUES ('anemail@email.com', '2024-02-04', '912-222-3333', 'AName', 'BName', '1111111111', '3024');
 
 INSERT INTO exerciseroutines(routine_desc)
 VALUES('100 Pushups, 100 Situps, 10KM Run\n');
