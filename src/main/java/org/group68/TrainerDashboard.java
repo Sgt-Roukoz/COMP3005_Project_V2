@@ -114,6 +114,10 @@ public class TrainerDashboard extends JFrame{
     private JLabel dataError;
     private JTextField bloodPressureDisplay;
     private JLabel bp;
+    private JPanel Routines;
+    private JPanel upcoming;
+    private JTextArea upcomingEvents;
+    private JTable table1;
     private int trainerID;
     private Connection databaseConnection;
 
@@ -126,14 +130,14 @@ public class TrainerDashboard extends JFrame{
 
         saveButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent evt) {
-                saveButtonPressed(evt);
+                saveButtonPressed();
             }
         });
 
         searchButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent evt) {
-                searchButtonPressed(evt);
+                searchButtonPressed();
             }
         });
 
@@ -148,8 +152,18 @@ public class TrainerDashboard extends JFrame{
         timeError.setVisible(false);
         dataError.setVisible(false);
 
+        this.setVisible(true);
+        setContentPane(TrainerDashboard);
+        this.pack();
+
     }
 
+    /**
+     * Deletes all contents of a given table associated with the trainer's ID. Used when trainers want to remake their
+     * schedules.
+     *
+     * @param tobeYeeted the table from which all trainer-associated tuples are to be deleted
+     * */
     private void yeetTableContents(String tobeYeeted) throws SQLException{
         Statement stmt = databaseConnection.createStatement();
         String SQL = "DELETE FROM " + tobeYeeted + " WHERE trainer_id ="+ trainerID +";";
@@ -157,7 +171,11 @@ public class TrainerDashboard extends JFrame{
         rs.close();
     }
 
-    private void saveButtonPressed(ActionEvent evt) {
+    /**
+     * Attempts to destroy the old schedule and save the current one entered into the JComboBoxes by the trainer into
+     * TrainerSchedule.
+     * */
+    private void saveButtonPressed() {
         try {
             yeetTableContents("TrainerAvailability");
         } catch (SQLException e) {
@@ -243,6 +261,14 @@ public class TrainerDashboard extends JFrame{
         dataError.setVisible(false);
     }
 
+    /**
+     * Enters a specific days' hours into TrainerSchedule as chosen by the trainer.
+     *
+     * @param stmt the SQL statement used to execute the query
+     * @param inputDayOfWeekString the String representing the day of the week chosen by the trainer
+     * @param starter the JComboBox containing the start time for the workday
+     * @param ender the JComboBox containing the end time for the workday
+     * */
     private void insertTrainerTuple(Statement stmt, String inputDayOfWeekString, JComboBox starter, JComboBox ender) throws SQLException {
         String SQL;
         String availableDayAttribute = getAvailableDayAttribute(inputDayOfWeekString);
@@ -257,28 +283,44 @@ public class TrainerDashboard extends JFrame{
         rs.close();
     }
 
-    private String getTimeAttribute(JComboBox start) {
-        String startTime = start.getSelectedItem().toString();
+    /**
+     * Reformats the time string in a JComboBox to a 24-hour clock format more suitable for SQL, and returns the
+     * resulting String.
+     *
+     * @param source the JComboBox whose selected time needs to be reformatted
+     *
+     * @return the String containing the time in a 24-hour clock format, ready to be inserted into a SQL table
+     * */
+    private String getTimeAttribute(JComboBox source) {
+        String time = source.getSelectedItem().toString();
 
-        String[] forStartHour = startTime.split("(?<=:)");
-        String startHour = forStartHour[0]; // hour
-        int sthr = Integer.parseInt(startHour.replace(':', ' ').trim());
+        String[] forHour = time.split("(?<=:)");
+        String hour = forHour[0]; // hour
+        int hr = Integer.parseInt(hour.replace(':', ' ').trim());
 
-        String[] forStartMinutes = startTime.split("(?>:)");
-        String startMinute = forStartMinutes[0]; // minutes
-        String starter = startMinute.substring(0, 2); //get the minutes from the part after the colon ('## AM' or '## PM')
-        String startM = startMinute.substring(3);
-        int stmin = Integer.parseInt(starter);
+        String[] forMinutes = time.split("(?>:)");
+        String minute = forMinutes[0]; // minutes
+        String er = minute.substring(0, 2); //get the minutes from the part after the colon ('## AM' or '## PM')
+        String M = minute.substring(3);
+        int min = Integer.parseInt(er);
 
-        if(startM.equals("PM")){
-            sthr += 12;
+        if(M.equals("PM")){
+            hr += 12;
         }
 
-        String start_time = sthr + ":" + stmin + ":00";
+        String result = hr + ":" + min + ":00";
 
-        return start_time;
+        return result;
     }
 
+    /**
+     * Takes a String containing a day of the week in capital letters and returns a date String formatted as yyyy-MM-dd
+     * to be inserted into TrainerAvailability. The date returned is the closest date to the input parameter.
+     *
+     * @param inputDayOfWeekString a day of the week in capital letters
+     *
+     * @return the String representation of the date
+     * */
     private String getAvailableDayAttribute(String inputDayOfWeekString) {
         DayOfWeek inputDayOfWeek = DayOfWeek.valueOf(inputDayOfWeekString);
         String availableDay;
@@ -294,6 +336,13 @@ public class TrainerDashboard extends JFrame{
         return availableDay;
     }
 
+    /**
+     * Takes two JComboBoxes and determines whether their contents are possible as start and end times.
+     *
+     * @param start the JComboBox containing the start time
+     * @param end the JComboBox containing the end time
+     * @return true if the latter argument is at a later time than the former, false otherwise
+     * */
     private boolean checkTimeConsistency(JComboBox start, JComboBox end){
         String startTime = start.getSelectedItem().toString();
         String endTime = end.getSelectedItem().toString();
@@ -336,6 +385,9 @@ public class TrainerDashboard extends JFrame{
         return true;
     }
 
+    /**
+     * Displays the current trainer's basic info in the top of the JPanel by pulling it from the GymTrainers table.
+     * */
     private void displayTrainerInfo() throws SQLException{
         Statement stmt = databaseConnection.createStatement();
         String SQL = "SELECT email, phone, first_name, last_name FROM GymTrainers WHERE trainer_id = " + trainerID;
@@ -353,6 +405,9 @@ public class TrainerDashboard extends JFrame{
         rs.close();
     }
 
+    /**
+     * Displays the current trainer's schedule in the availability JPanel by pulling it from the TrainerAvailability table.
+     * */
     private void displayTrainerSchedule() throws SQLException {
         Statement stmt = databaseConnection.createStatement();
         String SQL = "SELECT available_day, start_time, end_time FROM TrainerAvailability WHERE trainer_id =" + trainerID;
@@ -406,11 +461,22 @@ public class TrainerDashboard extends JFrame{
         rs.close();
     }
 
-    private void searchButtonPressed(ActionEvent evt){
+    /**
+     * Simply calls the displayMemberInfo and displayMemberMetrics methods whenever the searchButton is clicked
+     * */
+    private void searchButtonPressed(){
         int memID = displayMemberInfo(memberField.getText());
         displayMemberMetrics(memID);
+        memberField.setText("");
     }
 
+    /**
+     * Displays the member's administrative information in the viewMembers JPanel when the trainer searches for the
+     * member's name by pulling it from the GymMembers table.
+     *
+     * @param memberName the String entered into the memberField JTextField
+     * @return the integer value of the member ID
+     * */
     private int displayMemberInfo(String memberName){
         String fname = memberName.substring(0, memberName.indexOf(' '));
         String lname = memberName.substring(memberName.indexOf(' ')).trim();
@@ -446,6 +512,12 @@ public class TrainerDashboard extends JFrame{
         return 0;
     }
 
+    /**
+     * Displays the member's metrics in the viewMembers JPanel when the trainer searches for the member's name by
+     * pulling it from the Metrics table.
+     *
+     * @param id the member id
+     * */
     private void displayMemberMetrics(int id){
         if(id == 0){
             return;
@@ -472,22 +544,32 @@ public class TrainerDashboard extends JFrame{
     }
 
     public static void main(String[] args) {
-        {
-            Connection databaseConnection = null;
-            try {
+
+//        String url = "jdbc:postgresql://localhost:5432/COMP3005";
+//        String user = "postgres";
+//        String password = "TFERPLGK";
+
+
+
+
+
+        try {
                 Class.forName("org.postgresql.Driver");
-                String url = "jdbc:postgresql://localhost:5432/Students";
+                String url = "jdbc:postgresql://localhost:5432/COMP3005";
                 String user = "postgres";
-                String password = "z3i0";
-                databaseConnection = DriverManager.getConnection(url, user, password);
-                if (databaseConnection != null) System.out.println("Connected Successfully");
+                String password = "TFERPLGK";
+                Connection connection = DriverManager.getConnection(url, user, password);
+                Statement stmt = connection.createStatement();
+                 if (connection != null){ System.out.println("Connected Successfully");
+
+                     new TrainerDashboard(1, connection);
+                 }
                 else System.out.println("Connection Failed");
             } catch (SQLException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
 
-            new TrainerDashboard(1, databaseConnection);
         }
-    }
+
 
 }
