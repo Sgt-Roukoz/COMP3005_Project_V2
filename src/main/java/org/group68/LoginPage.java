@@ -156,6 +156,7 @@ public class LoginPage extends JFrame{
                                 MemberDashboard newInstance = new MemberDashboard(connection, memberID);
                                 newInstance.setVisible(true);
                                 this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+                                break;
                             }else{
                                 error.setVisible(true);
                             }
@@ -178,6 +179,7 @@ public class LoginPage extends JFrame{
                                 TrainerDashboard newInstance = new TrainerDashboard(trainerID, connection);
                                 newInstance.setVisible(true);
                                 this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+                                break;
                             }else{
                                 error.setVisible(true);
                             }
@@ -198,9 +200,10 @@ public class LoginPage extends JFrame{
                             int adminID = rs.getInt("admin_id");
                             String adminPassword = rs.getString("admin_password");
                             if(adminPassword.equals(pword)){
-                                //AdminDashboard newInstance = new AdminDashboard(adminID, connection);
-                                //newInstance.setVisible(true);
+                                AdminDashboard newInstance = new AdminDashboard(connection);
+                                newInstance.setVisible(true);
                                 this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
+                                break;
                             }else{
                                 error.setVisible(true);
                             }
@@ -282,7 +285,7 @@ public class LoginPage extends JFrame{
     private void enterWeight(String weighty, Statement stmt, Integer newestMemberID, java.sql.Date sqlDate) {
         String SQL;
         try{
-            SQL = "UPDATE WeightAccumulate (weight, date_logged) SET weight = " + weighty + ", date_logged = " + sqlDate + " WHERE member_id = " + newestMemberID + ";";
+            SQL = "UPDATE WeightAccumulate (weight, date_logged) SET weight = " + weighty + ", date_logged = " + sqlDate + " WHERE member_id = " + newestMemberID;
             stmt.executeQuery(SQL);
         }catch (SQLException e){
             e.printStackTrace();

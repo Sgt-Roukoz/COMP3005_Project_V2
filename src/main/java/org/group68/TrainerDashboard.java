@@ -6,6 +6,8 @@ import com.github.weisj.darklaf.theme.DarculaTheme;
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.sql.*;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -117,7 +119,7 @@ public class TrainerDashboard extends JFrame{
     private JPanel Routines;
     private JPanel upcoming;
     private JTextArea upcomingEvents;
-    private JTable table1;
+    private JTable routineTable;
     private int trainerID;
     private Connection databaseConnection;
 
@@ -152,9 +154,143 @@ public class TrainerDashboard extends JFrame{
         timeError.setVisible(false);
         dataError.setVisible(false);
 
+        mondayCheckBox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if(mondayCheckBox.isSelected()){
+                    monStartTime.setEnabled(true);
+                    monEndTime.setEnabled(true);
+                }else{
+                    monStartTime.setEnabled(false);
+                    monEndTime.setEnabled(false);
+                }
+            }
+        });
+
+        tuesdayCheckBox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if(tuesdayCheckBox.isSelected()){
+                    tuesStartTime.setEnabled(true);
+                    tuesEndTime.setEnabled(true);
+                }else{
+                    tuesStartTime.setEnabled(false);
+                    tuesEndTime.setEnabled(false);
+                }
+            }
+        });
+
+        wednesdayCheckBox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if(wednesdayCheckBox.isSelected()){
+                    wedStartTime.setEnabled(true);
+                    wedEndTime.setEnabled(true);
+                }else{
+                    wedStartTime.setEnabled(false);
+                    wedEndTime.setEnabled(false);
+                }
+            }
+        });
+
+        thursdayCheckBox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if(thursdayCheckBox.isSelected()){
+                    thursStartTime.setEnabled(true);
+                    thursEndTime.setEnabled(true);
+                }else{
+                    thursStartTime.setEnabled(false);
+                    thursEndTime.setEnabled(false);
+                }
+            }
+        });
+
+        fridayCheckBox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if(fridayCheckBox.isSelected()){
+                    friStartTime.setEnabled(true);
+                    friEndTime.setEnabled(true);
+                }else{
+                    friStartTime.setEnabled(false);
+                    friEndTime.setEnabled(false);
+                }
+            }
+        });
+
+        saturdayCheckBox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if(saturdayCheckBox.isSelected()){
+                    satStartTime.setEnabled(true);
+                    satEndTime.setEnabled(true);
+                }else{
+                    satStartTime.setEnabled(false);
+                    satEndTime.setEnabled(false);
+                }
+            }
+        });
+
+        sundayCheckBox.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if(sundayCheckBox.isSelected()){
+                    sunStartTime.setEnabled(true);
+                    sunEndTime.setEnabled(true);
+                }else{
+                    sunStartTime.setEnabled(false);
+                    sunEndTime.setEnabled(false);
+                }
+            }
+        });
+
+        displayUpcoming();
+
         this.setVisible(true);
         setContentPane(TrainerDashboard);
         this.pack();
+
+    }
+
+    /**
+     * Displays the upcoming classes and sessions for a trainer in a text area.
+     * */
+    private void displayUpcoming(){
+        try{
+            upcomingEvents.setText("Upcoming group classes: \n");
+            Statement statement = databaseConnection.createStatement();
+            String SQL = "SELECT trainer_id, class_id, class_name, room_id, booking_date, start_time, end_time FROM GroupClasses JOIN RoomBookings ON GroupClasses.room_id = RoomBookings.room_id WHERE trainer_id = " + this.trainerID;
+            ResultSet rs = statement.executeQuery(SQL);
+            while(rs.next()){
+                String cid = rs.getString("class_id");
+                String cname = rs.getString("class_name");
+                String roomNum = rs.getString("room_id");
+                String bookingDate = rs.getString("booking_date");
+                String startTime = rs.getString("start_time");
+                String endTime = rs.getString("end_time");
+                upcomingEvents.append("Class ID: " + cid + "\n Class name: " + cname + " \n Room number: " + roomNum + " \n Date: " + bookingDate + "\n Start time: " + startTime + "\n End time: " + endTime + "\n \n");
+            }
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+
+        try{
+            upcomingEvents.setText("Upcoming private sessions: \n");
+            Statement stmt = databaseConnection.createStatement();
+            String SQL = "SELECT trainer_id, member_id, set_routine, session_date, start_time, first_name, last_name FROM PrivateSessions JOIN GymMembers ON PrivateSessions.member_id = GymMembers.member_id  WHERE trainer_id = " + this.trainerID;
+            ResultSet rs = stmt.executeQuery(SQL);
+            while(rs.next()){
+                String fname = rs.getString("first_name");
+                String lname = rs.getString("last_name");
+                String setRoutine = rs.getString("set_routine");
+                String sessionDate = rs.getString("session_date");
+                String startTime = rs.getString("start_time");
+                upcomingEvents.append("Routine: " + setRoutine + "With member: " + fname + " " + lname + " \n Date: " + sessionDate + "\n Start time: " + startTime + "\n \n");
+            }
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
 
     }
 
@@ -194,7 +330,7 @@ public class TrainerDashboard extends JFrame{
                     timeError.setVisible(true);
                 }else{
                     String inputDayOfWeekString = "SUNDAY";
-                    insertTrainerTuple(stmt, inputDayOfWeekString, sunStartTime, sunEndTime);
+                    insertAvailabilityTuple(stmt, inputDayOfWeekString, sunStartTime, sunEndTime);
                 }
             }
 
@@ -203,7 +339,7 @@ public class TrainerDashboard extends JFrame{
                     timeError.setVisible(true);
                 }else{
                     String inputDayOfWeekString = "MONDAY";
-                    insertTrainerTuple(stmt, inputDayOfWeekString, monStartTime, monEndTime);
+                    insertAvailabilityTuple(stmt, inputDayOfWeekString, monStartTime, monEndTime);
                 }
             }
 
@@ -212,7 +348,7 @@ public class TrainerDashboard extends JFrame{
                     timeError.setVisible(true);
                 }else{
                     String inputDayOfWeekString = "TUESDAY";
-                    insertTrainerTuple(stmt, inputDayOfWeekString, tuesStartTime, tuesEndTime);
+                    insertAvailabilityTuple(stmt, inputDayOfWeekString, tuesStartTime, tuesEndTime);
                 }
             }
 
@@ -221,7 +357,7 @@ public class TrainerDashboard extends JFrame{
                     timeError.setVisible(true);
                 }else{
                     String inputDayOfWeekString = "WEDNESDAY";
-                    insertTrainerTuple(stmt, inputDayOfWeekString, wedStartTime, wedEndTime);
+                    insertAvailabilityTuple(stmt, inputDayOfWeekString, wedStartTime, wedEndTime);
                 }
             }
 
@@ -230,7 +366,7 @@ public class TrainerDashboard extends JFrame{
                     timeError.setVisible(true);
                 }else{
                     String inputDayOfWeekString = "THURSDAY";
-                    insertTrainerTuple(stmt, inputDayOfWeekString, thursStartTime, thursEndTime);
+                    insertAvailabilityTuple(stmt, inputDayOfWeekString, thursStartTime, thursEndTime);
                 }
             }
 
@@ -239,7 +375,7 @@ public class TrainerDashboard extends JFrame{
                     timeError.setVisible(true);
                 }else{
                     String inputDayOfWeekString = "FRIDAY";
-                    insertTrainerTuple(stmt, inputDayOfWeekString, friStartTime, friEndTime);
+                    insertAvailabilityTuple(stmt, inputDayOfWeekString, friStartTime, friEndTime);
                 }
             }
 
@@ -248,7 +384,7 @@ public class TrainerDashboard extends JFrame{
                     timeError.setVisible(true);
                 }else{
                     String inputDayOfWeekString = "SATURDAY";
-                    insertTrainerTuple(stmt, inputDayOfWeekString, satStartTime, satEndTime);
+                    insertAvailabilityTuple(stmt, inputDayOfWeekString, satStartTime, satEndTime);
                 }
             }
 
@@ -257,7 +393,6 @@ public class TrainerDashboard extends JFrame{
             e.printStackTrace();
         }
         errorName.setVisible(false);
-        timeError.setVisible(false);
         dataError.setVisible(false);
     }
 
@@ -269,7 +404,7 @@ public class TrainerDashboard extends JFrame{
      * @param starter the JComboBox containing the start time for the workday
      * @param ender the JComboBox containing the end time for the workday
      * */
-    private void insertTrainerTuple(Statement stmt, String inputDayOfWeekString, JComboBox starter, JComboBox ender) throws SQLException {
+    private void insertAvailabilityTuple(Statement stmt, String inputDayOfWeekString, JComboBox starter, JComboBox ender) throws SQLException {
         String SQL;
         String availableDayAttribute = getAvailableDayAttribute(inputDayOfWeekString);
 
@@ -278,7 +413,7 @@ public class TrainerDashboard extends JFrame{
         String endTime = getTimeAttribute(ender);
 
         SQL = "INSERT INTO TrainerAvailability (trainer_id, available_day, start_time, end_time) VALUES (" +
-                trainerID + ", " + availableDayAttribute + ", " + startTime + ", " + endTime + ");";
+                trainerID + ", " + availableDayAttribute + ", " + startTime + ", " + endTime;
         ResultSet rs = stmt.executeQuery(SQL);
         rs.close();
     }
