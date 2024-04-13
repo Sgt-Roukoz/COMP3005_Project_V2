@@ -76,7 +76,7 @@ public class AdminDashboard extends JFrame {
 
         JMenu routines = new JMenu("Exercise Routines");
         JMenuItem viewRoutines = new JMenuItem("View Routines");
-        viewRoutines.addActionListener(e -> viewRoutines());
+        viewRoutines.addActionListener(e -> showRoutines());
         routines.add(viewRoutines);
         menuBar.add(routines);
 
@@ -218,7 +218,7 @@ public class AdminDashboard extends JFrame {
         }
     }
 
-    private void viewRoutines() {
+    private void showRoutines() {
         System.out.println("view routines");
         try {
             routinesTable.setRowCount(0);
@@ -230,6 +230,7 @@ public class AdminDashboard extends JFrame {
             rs.close();
         } catch (SQLException e){
             e.printStackTrace();
+
         }
         mainTable.setModel(routinesTable);
         currentTable = routinesTable;
@@ -304,12 +305,11 @@ public class AdminDashboard extends JFrame {
         currentTable = billingTable;
     }
 
-    //TODO
     private void deleteRow(){
         int selected = mainTable.getSelectedRow();
         System.out.println(selected);
         Statement stmt;
-        if(currentTable == equipmentTable || currentTable == billingTable || currentTable == classesTable) {
+        if(currentTable == equipmentTable || currentTable == billingTable || currentTable == classesTable || currentTable == routinesTable) {
             int id = (Integer) mainTable.getValueAt(selected, 0);
             try {
                 stmt = databaseConnection.createStatement();
@@ -320,6 +320,11 @@ public class AdminDashboard extends JFrame {
                 else if (currentTable == billingTable) {
                     stmt.executeUpdate("DELETE FROM billings WHERE bill_id = " + id + ";");
                     showBilling();
+                }
+
+                else if (currentTable == routinesTable) {
+                    stmt.executeUpdate("DELETE FROM exerciseroutines WHERE routine_id = " + id + ";");
+                    showRoutines();
                 }
                 else {
                     stmt.executeUpdate("DELETE FROM groupclasses WHERE class_id = " + id + ";");
