@@ -17,6 +17,7 @@ import java.time.LocalTime;
 import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import net.time4j.ClockUnit;
 import net.time4j.PlainTime;
@@ -40,11 +41,11 @@ public class MemberDashboard extends JFrame {
     private JButton achievementApply;
     private JTable achievementTable;
     private JTable table1;
-    private JButton button1;
+    private JButton addRoutine;
     private JTabbedPane dashboardPane;
     private JTable goaltable;
-    private JButton button2;
-    private JButton button3;
+    private JButton removeGoal;
+    private JButton addGoal;
 
     //Schedule Page Variables
     private JTable upcomingClasses;
@@ -59,12 +60,33 @@ public class MemberDashboard extends JFrame {
     private JButton privateSessionBook;
     private JButton cancelSession;
     private JButton rescheduleSession;
-    private JTable billsTable;
-    private JButton cancelBill;
-    private JButton payBill;
     private JButton cancelClass;
     private JButton joinClassButton;
     private JComboBox routineSelector;
+    private JButton paySelectedBillButton;
+    private JTextField textField1;
+    private JTextField textField2;
+    private JPasswordField passwordField1;
+    private JPasswordField passwordField2;
+    private JPasswordField passwordField3;
+    private JButton changePasswordButton;
+    private JButton changeEmailButton;
+    private JButton changeUsernameButton;
+    private JTextField hrfield;
+    private JTextField bpfield;
+    private JTextField weightfield;
+    private JButton logButton;
+    private JTextField avgHR;
+    private JTextField avgWeight;
+    private JTextField minHR;
+    private JTextField maxHR;
+    private JTextField minWeight;
+    private JTextField maxWeight;
+    private JLabel firstName;
+    private JLabel lastName;
+    private JButton applyGoals;
+    private JLabel logStatus;
+    private JButton resetButton;
     private Map<Integer, GroupClass> availableClasses;
 
     //models
@@ -79,9 +101,21 @@ public class MemberDashboard extends JFrame {
         this.memberID = memberID;
         sessionTimeSelector.setEnabled(false);
         availableClasses = new HashMap<>();
-        String[] days = {"Monday", "Tuesday", "Wednesday", "Thursday", "Friday"};
-        sessionDaySelector.setModel(new DefaultComboBoxModel<>(days));
 
+        LocalDate localDate = LocalDate.now();
+        LocalDate firstDayOfNextWeek = localDate.with(TemporalAdjusters.next(DayOfWeek.MONDAY));
+        List<LocalDate> remainingDays = localDate.datesUntil(firstDayOfNextWeek)
+                .collect(Collectors.toList());
+        Vector<String> days = new Vector<>();
+        for (LocalDate date : remainingDays)
+        {
+            String day = date.getDayOfWeek().toString();
+            day = day.charAt(0) + day.substring(1).toLowerCase();
+            days.add(day);
+        }
+
+        sessionDaySelector.setModel(new DefaultComboBoxModel<>(days));
+        sessionDaySelector.setSelectedIndex(-1);
         setUpInitialValues();
         setTitle("Member Dashboard");
         setContentPane(mainPane);
@@ -91,18 +125,21 @@ public class MemberDashboard extends JFrame {
         LafManager.install(new DarculaTheme()); //using custom theme from LaFManager
         setVisible(true);
         setResizable(false);
+
         achievementApply.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 applyAchievementChanges();
             }
         });
+
         achievementReset.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 retrieveAchievements();
             }
         });
+
         classSelector.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -142,7 +179,12 @@ public class MemberDashboard extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 int selectedRow = upcomingClasses.getSelectedRow();
-                removeMemberFromClass(Integer.parseInt((String) upcomingClasses.getModel().getValueAt(selectedRow, 0)));
+
+                int selectedOption = JOptionPane.showConfirmDialog(null,
+                        "Are you sure you want to leave this class?",
+                        "Class Confirmation",
+                        JOptionPane.YES_NO_OPTION);
+                if (selectedOption == 0) removeMemberFromClass(Integer.parseInt((String) upcomingClasses.getModel().getValueAt(selectedRow, 0)));
             }
         });
         joinClassButton.addActionListener(new ActionListener() {
@@ -168,6 +210,196 @@ public class MemberDashboard extends JFrame {
                 bookNewSession(trainerid, routine, day, start_time);
             }
         });
+
+        addRoutine.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                MemberRoutineDialog temp = new MemberRoutineDialog(memberID, databaseConnection);
+                temp.showDialog();
+                System.out.println("GOTCHAA");
+            }
+        });
+        changePasswordButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+            }
+        });
+
+        rescheduleSession.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int row = upcomingSessions.getSelectedRow();
+
+                new MemberSessionReschedule( Integer.parseInt((String)upcomingSessions.getModel().getValueAt(row, 0)),
+                        Integer.parseInt((String)upcomingSessions.getModel().getValueAt(row, 1)),(String)upcomingSessions.getModel().getValueAt(row, 2) ,databaseConnection);
+                setUpSessionsValues();
+
+            }
+        });
+
+        cancelSession.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                int row = upcomingSessions.getSelectedRow();
+
+                int session_id = Integer.parseInt((String)upcomingSessions.getModel().getValueAt(row, 0));
+
+                int selectedOption = JOptionPane.showConfirmDialog(null,
+                        "Are you sure you want to cancel this session?",
+                        "Choose",
+                        JOptionPane.YES_NO_OPTION);
+
+                System.out.println(selectedOption);
+
+                try {
+                    Statement cancelSession = databaseConnection.createStatement();
+
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
+
+        logButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                if (isNumeric(hrfield.getText()) && bpfield.getText().matches("[0-9]{2,3}/[0-9]{2}") && isNumeric(weightfield.getText())) {
+                    logStatus.setText("");
+                    try{
+
+                        int selectedOption = JOptionPane.showConfirmDialog(null,
+                                "Are you sure you want to log these values?",
+                                "Choose",
+                                JOptionPane.YES_NO_OPTION);
+
+                        if (selectedOption == 1) return;
+                        Statement metrics = databaseConnection.createStatement();
+                        String msg = "INSERT INTO weightaccumulate\n" +
+                                "VALUES(" + memberID + ", '" + weightfield.getText() + "' , CURRENT_DATE);\n" +
+                                "INSERT INTO restinghraccumulate\n" +
+                                "VALUES(" + memberID + ", '" + hrfield.getText() + "' , CURRENT_DATE);\n" +
+                                "INSERT INTO bloodpraccumulate\n" +
+                                "VALUES(" + memberID + ", '" + bpfield.getText() + "' , CURRENT_DATE);";
+                        metrics.execute(msg);
+                    } catch (SQLException ex) {
+                        logStatus.setText("Something went wrong");
+                    }
+
+                    resetMetrics();
+                }
+                else logStatus.setText("Values invalid");
+            }
+        });
+        addGoal.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                goalmodel.addRow(new Object[]{"",false,""});
+            }
+        });
+
+        removeGoal.addActionListener(new ActionListener() { //remove selected goal
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                String goal = (String) goaltable.getValueAt(goaltable.getSelectedRow(), 0);
+
+                int selectedOption = JOptionPane.showConfirmDialog(null,
+                        "Are you sure you want remove this goal?",
+                        "Choose",
+                        JOptionPane.YES_NO_OPTION);
+
+                if (selectedOption == 1) return;
+
+                try {
+                    Statement removeGoal = databaseConnection.createStatement();
+                    String msg = "DELETE FROM achievements\n" +
+                            "WHERE member_id = " + memberID + " AND description = '" + goal + "';";
+                    removeGoal.execute(msg);
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+
+                setUpAchievements();
+            }
+        });
+
+        applyGoals.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                int selectedOption = JOptionPane.showConfirmDialog(null,
+                        "Are you sure you want to apply these changes?\n" +
+                                "This could reset the achieved status",
+                        "Choose",
+                        JOptionPane.YES_NO_OPTION);
+
+                if (selectedOption == 1) return;
+
+                try {
+                    Statement getGoals = databaseConnection.createStatement();
+                    String msg = "SELECT * \n" +
+                            "FROM achievements\n" +
+                            "WHERE member_id = " + memberID;
+                    getGoals.executeQuery(msg);
+
+                    ResultSet goalSet = getGoals.getResultSet();
+
+                    int row = 0;
+                    while (goalSet.next())
+                    {
+                        String goal = (String) goalmodel.getValueAt(row, 0);
+                        if (!goal.equals(goalSet.getString("description")))
+                        {
+                            Statement updateGoal = databaseConnection.createStatement();
+                            String setmsg = "UPDATE achievements\n" +
+                                    "SET achieved = FALSE, date_achieved = null, description = '" + goal + "'\n" +
+                                    "WHERE member_id = " + memberID + " AND description = '" + goalSet.getString("description") + "'";
+                            updateGoal.execute(setmsg);
+                            updateGoal.close();
+                        }
+                        row++;
+                    }
+                    for (; row < goalmodel.getRowCount(); row++)
+                    {
+                        String goal = (String) goalmodel.getValueAt(row, 0);
+                        Statement addGoal = databaseConnection.createStatement();
+                        String addmsg = "INSERT INTO achievements\n" +
+                                "VALUES(" + memberID + ", '" + goal + "', false, null)";
+                        addGoal.execute(addmsg);
+                        addGoal.close();
+                    }
+
+                    setUpAchievements();
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
+        resetButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setUpAchievements();
+            }
+        });
+    }
+
+    /**
+     * Checks if string is a number
+     * @param strNum string being checked
+     * @return Returns true if string is a number, false otherwise
+     */
+    public static boolean isNumeric(String strNum) {
+        if (strNum == null) {
+            return false;
+        }
+        try {
+            double d = Double.parseDouble(strNum);
+        } catch (NumberFormatException nfe) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -241,8 +473,6 @@ public class MemberDashboard extends JFrame {
         LocalDate day = convertToDate(daySelected);
         LocalTime time = LocalTime.parse(timeSelected);
         Map<Integer, IntervalCollection<PlainTime>> trainerIntervals = new HashMap<>();
-        System.out.println(time);
-        System.out.println(day);
         try {
             //grab trainers that are available during the selected day
             Statement initTrainer = databaseConnection.createStatement();
@@ -368,24 +598,27 @@ public class MemberDashboard extends JFrame {
      * Setting up initial metrics for member dashboard
      */
     private void setUpInitialValues() {
+        resetMetrics();
+        setUpAchievements();
+        setUpSessionsClasses();
+    }
+
+    private void resetMetrics() {
         try {
             Statement statement = databaseConnection.createStatement();
             statement.executeQuery("SELECT * FROM metrics WHERE member_id = " + memberID);
             ResultSet resultSet = statement.getResultSet();
             resultSet.next();
-            hrIcon.setText(String.valueOf(resultSet.getInt("weight")));
+            hrIcon.setText(resultSet.getString("weight"));
             hrIcon.setFont(new Font("Jetbrains Mono", Font.BOLD, 15));
-            weightIcon.setText(String.valueOf(resultSet.getInt("resting_hr")));
+            weightIcon.setText(resultSet.getString("resting_hr"));
             weightIcon.setFont(new Font("Jetbrains Mono", Font.BOLD, 15));
-            bpIcon.setText(String.valueOf(resultSet.getInt("blood_pressure")));
+            bpIcon.setText(resultSet.getString("blood_pressure"));
             bpIcon.setFont(new Font("Jetbrains Mono", Font.BOLD, 15));
             statement.close();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-
-        setUpAchievements();
-        setUpSessionsClasses();
     }
 
     /**
@@ -415,13 +648,13 @@ public class MemberDashboard extends JFrame {
         }
         upcomingSessions.setDefaultEditor(Object.class, null);
         GetAvailableClasses();
-        GetBookedSessions();
+
     }
 
     /**
      * Get upcoming sessions booked by member
      */
-    private void GetBookedSessions() {
+    private void setUpSessionsValues() {
         sessionsModel.setRowCount(0);
         try {
             Statement sessionsStatement = databaseConnection.createStatement();
@@ -432,12 +665,13 @@ public class MemberDashboard extends JFrame {
             sessionsStatement.executeQuery(message);
             ResultSet sessionsStatementResultSet = sessionsStatement.getResultSet();
             while (sessionsStatementResultSet.next()) {
-                sessionsModel.addRow(new Object[]{sessionsStatementResultSet.getString("trainer_id"),
+                sessionsModel.addRow(new String[]{sessionsStatementResultSet.getString("session_id"),
+                        sessionsStatementResultSet.getString("trainer_id"),
                         sessionsStatementResultSet.getString("first_name") + " " + sessionsStatementResultSet.getString("last_name"),
                         sessionsStatementResultSet.getString("set_routine"),
                         sessionsStatementResultSet.getString("session_date"),
-                        LocalTime.parse(sessionsStatementResultSet.getString("start_time")),
-                        LocalTime.parse(sessionsStatementResultSet.getString("start_time")).plusHours(1)});
+                        LocalTime.parse(sessionsStatementResultSet.getString("start_time")).toString(),
+                        LocalTime.parse(sessionsStatementResultSet.getString("start_time")).plusHours(1).toString()});
             }
             sessionsStatementResultSet.close();
             sessionsStatement.close();
@@ -480,6 +714,9 @@ public class MemberDashboard extends JFrame {
 
     }
 
+    /**
+     * Sets up Upcoming Sessions and Upcoming Classes tables
+     */
     private void setUpSessionsClasses() {
         dateField.setEditable(false);
         starttimeField.setEditable(false);
@@ -493,7 +730,8 @@ public class MemberDashboard extends JFrame {
         classesModel.addColumn("Date");
         classesModel.addColumn("Start Time");
         classesModel.addColumn("End Time");
-        sessionsModel.addColumn("ID");
+        sessionsModel.addColumn("Session ID");
+        sessionsModel.addColumn("Trainer ID");
         sessionsModel.addColumn("Trainer");
         sessionsModel.addColumn("Exercise");
         sessionsModel.addColumn("Date");
@@ -501,7 +739,8 @@ public class MemberDashboard extends JFrame {
         sessionsModel.addColumn("End Time");
         upcomingClasses.setModel(classesModel);
         upcomingSessions.setModel(sessionsModel);
-        upcomingSessions.getColumnModel().removeColumn(upcomingSessions.getColumn("ID"));
+        upcomingSessions.getColumnModel().removeColumn(upcomingSessions.getColumn("Session ID"));
+        upcomingSessions.getColumnModel().removeColumn(upcomingSessions.getColumn("Trainer ID"));
         upcomingClasses.getColumnModel().removeColumn(upcomingClasses.getColumn("ID"));
 
         JTextField tf = new JTextField();
@@ -522,15 +761,21 @@ public class MemberDashboard extends JFrame {
             @Override
             public void valueChanged(ListSelectionEvent e) {
                 cancelSession.setEnabled(!upcomingSessions.getSelectionModel().isSelectionEmpty());
+                rescheduleSession.setEnabled(!upcomingSessions.getSelectionModel().isSelectionEmpty());
             }
         });
 
         setUpClassesValues();
-        //setUpSessionsValues();
+        setUpSessionsValues();
     }
 
+    /**
+     * Updates achievements and goals table
+     */
     private void retrieveAchievements() {
         try {
+            goalmodel.setRowCount(0);
+            achievementmodel.setRowCount(0);
             Statement statement = databaseConnection.createStatement();
             statement.executeQuery("SELECT * FROM achievements WHERE member_id = " + memberID);
             ResultSet resultSet = statement.getResultSet();
@@ -551,14 +796,42 @@ public class MemberDashboard extends JFrame {
      */
     private void setUpAchievements() {
         achievementmodel = new AchievementModel();
-        goalmodel = new AchievementModel();
+        goalmodel = new GoalModel();
         retrieveAchievements();
         achievementTable.setModel(achievementmodel);
+        goaltable.setModel(goalmodel);
+
+        goaltable.getColumnModel().getColumn(0).setPreferredWidth(250);
         achievementTable.getColumnModel().getColumn(0).setPreferredWidth(250);
         achievementTable.getColumnModel().getColumn(1).setPreferredWidth(10);
         System.out.println(achievementTable.getColumnModel().getColumn(1).getHeaderValue());
 
+        goaltable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
+            @Override
+            public void valueChanged(ListSelectionEvent e) {
+
+                if (goaltable.getSelectedRow() < 0) return;
+                String goal = (String) goaltable.getValueAt(goaltable.getSelectedRow(), 0);
+
+                removeGoal.setEnabled(!goaltable.getSelectionModel().isSelectionEmpty() && !goal.equals(""));
+            }
+        });
+
     }
+
+
+
+    public static class GoalModel extends DefaultTableModel {
+        public GoalModel() {
+            super(new String[]{"Goal"}, 0);
+        }
+
+        @Override
+        public boolean isCellEditable(int row, int column) {
+            return column == 0;
+        }
+    }
+
 
     public static class AchievementModel extends DefaultTableModel {
 
@@ -593,6 +866,7 @@ public class MemberDashboard extends JFrame {
             }
         }
     }
+
 
     protected void applyAchievementChanges() {
         try {
@@ -633,7 +907,7 @@ public class MemberDashboard extends JFrame {
             e.printStackTrace();
         }
 
-        new MemberDashboard(databaseConnection, 1);
+        new MemberDashboard(databaseConnection, 4);
     }
 
 }

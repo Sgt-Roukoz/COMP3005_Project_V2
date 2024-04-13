@@ -39,14 +39,11 @@ CREATE TABLE IF NOT EXISTS PrivateSessions (
 	session_id SERIAL PRIMARY KEY,
 	member_id INT NOT NULL,
 	trainer_id INT NOT NULL,
-	routine_id INT NOT NULL,
+	set_routine varchar(255) NOT NULL,
 	start_time TIME NOT NULL,
 	session_date DATE NOT NULL,
-	room_id INT NOT NULL,
 	FOREIGN KEY (member_id) REFERENCES GymMembers(member_id),
-	FOREIGN KEY (trainer_id) REFERENCES GymTrainers(trainer_id),
-	FOREIGN KEY (routine_id) REFERENCES ExerciseRoutines(routine_id),
-	FOREIGN KEY (room_id) REFERENCES Rooms(room_id)
+	FOREIGN KEY (trainer_id) REFERENCES GymTrainers(trainer_id)
 );
 
 CREATE TABLE IF NOT EXISTS RoomBookings (
@@ -79,7 +76,7 @@ CREATE TABLE IF NOT EXISTS Billings (
 	bill_id SERIAL PRIMARY KEY,
 	member_id INT NOT NULL,
 	bill_type varchar(255) NOT NULL,
-	bill_value varchar(255) NOT NULL,
+	bill_value NUMERIC(7,5) NOT NULL,
 	date_billed DATE NOT NULL,
 	bill_paid BOOLEAN NOT NULL,
 	FOREIGN KEY (member_id) REFERENCES GymMembers(member_id)
@@ -107,6 +104,13 @@ CREATE TABLE IF NOT EXISTS AdminLogin (
 	FOREIGN KEY (admin_id) REFERENCES GymAdmin(admin_id)
 );
 
+CREATE TABLE IF NOT EXISTS TrainerLogin (
+    trainer_id INT NOT NULL,
+    trainer_username varchar(255) NOT NULL UNIQUE,
+    trainer_password varchar(255) NOT NULL,
+    FOREIGN KEY (trainer_id) REFERENCES GymTrainers(trainer_id)
+);
+
 CREATE TABLE IF NOT EXISTS MemberLogins (
 	member_id INT NOT NULL,
 	member_username varchar(255) NOT NULL UNIQUE,
@@ -131,29 +135,26 @@ CREATE TABLE IF NOT EXISTS Achievements (
 
 CREATE TABLE IF NOT EXISTS Metrics (
 	member_id INT NOT NULL,
-	weight INT NOT NULL,
-	resting_hr INT NOT NULL,
-	blood_pressure INT NOT NULL,
+	weight NUMERIC(5,2) NOT NULL,
+	resting_hr NUMERIC(5,2) NOT NULL,
+	blood_pressure varchar(7) NOT NULL,
 	FOREIGN KEY (member_id) REFERENCES GymMembers(member_id)
 );
 
 CREATE TABLE IF NOT EXISTS MemberStatistics (
 	member_id INT NOT NULL,
-	avg_weight INT NOT NULL,
-	max_weight INT NOT NULL,
-	min_weight INT NOT NULL,
-	avg_resting_hr INT NOT NULL,
-	max_resting_hr INT NOT NULL,
-	min_resting_hr INT NOT NULL,
-	avg_blood_pressure INT NOT NULL,
-	max_blood_pressute INT NOT NULL,
-	min_blood_pressure INT NOT NULL,
+	avg_weight NUMERIC(5,2) NOT NULL,
+	max_weight NUMERIC(5,2) NOT NULL,
+	min_weight NUMERIC(5,2) NOT NULL,
+	avg_resting_hr NUMERIC(5,2) NOT NULL,
+	max_resting_hr NUMERIC(5,2) NOT NULL,
+	min_resting_hr NUMERIC(5,2) NOT NULL,
 	FOREIGN KEY (member_id) REFERENCES GymMembers(member_id)
 );
 
 CREATE TABLE IF NOT EXISTS WeightAccumulate (
 	member_id INT NOT NULL,
-	weight INT NOT NULL,
+	weight NUMERIC(5,2) NOT NULL,
 	date_logged DATE,
 	FOREIGN KEY (member_id) REFERENCES GymMembers(member_id)
 );
@@ -167,13 +168,13 @@ CREATE TABLE IF NOT EXISTS RestingHRAccumulate (
 
 CREATE TABLE IF NOT EXISTS BloodPRAccumulate (
 	member_id INT NOT NULL,
-	blood_pr INT NOT NULL,
+	blood_pr varchar(7) NOT NULL,
 	date_logged DATE,
 	FOREIGN KEY (member_id) REFERENCES gymmembers(member_id)
 );
 
 -- TRIGGERS
-CREATE OR REPLACE FUNCTION add_metrics()
+CREATE OR REPLACE FUNCTION add_metrics_and_bill()
 	returns TRIGGER
 	language plpgsql
 AS
@@ -182,7 +183,9 @@ begin
 	INSERT INTO Metrics
 	VALUES(NEW.member_id, 0, 0, 0);
 	INSERT INTO MemberStatistics
-	VALUES(NEW.member_id, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	VALUES(NEW.member_id, 0, 0, 0, 0, 0, 0);
+	INSERT INTO Billings(member_id, bill_type, bill_value, date_billed, bill_paid)
+	VALUES(NEW.member_id, 'Membership Fee', 53.00, CURRENT_DATE, TRUE);
 	RETURN NEW;
 end;
 $$;
@@ -190,7 +193,7 @@ $$;
 CREATE OR REPLACE TRIGGER addMetrics
 	AFTER INSERT ON GymMembers
 	FOR EACH ROW
-	EXECUTE PROCEDURE add_metrics();
+	EXECUTE PROCEDURE add_metrics_and_bill();
 
 -- update weight
 CREATE OR REPLACE FUNCTION check_weight()
@@ -238,7 +241,7 @@ begin
 	WHERE MemberStatistics.member_id = NEW.member_id;
 	
 	UPDATE Metrics
-	SET resting_hr = NEW.weight
+	SET resting_hr = NEW.resting_hr
 	WHERE Metrics.member_id = NEW.member_id;
 	RETURN NEW;
 end;
@@ -256,26 +259,50 @@ CREATE OR REPLACE FUNCTION check_bpr()
 AS
 $$
 begin
-	UPDATE MemberStatistics 
-	SET (avg_blood_pressure, max_blood_pressure, min_blood_pressure) =(
-		SELECT avg(blood_pressure) as bpravg,
-			   max(blood_pressure) as bprmax,
-			   min(blood_pressure) as bprmin
-		FROM BloodPRAccumulate
-		WHERE BloodPRAccumulate.member_id = NEW.member_id
-	)
-	WHERE MemberStatistics.member_id = NEW.member_id;
-	
 	UPDATE Metrics
-	SET resting_hr = NEW.weight
+	SET blood_pressure = NEW.blood_pr
 	WHERE Metrics.member_id = NEW.member_id;
 	RETURN NEW;
 end;
 $$;
 
-CREATE OR REPLACE TRIGGER updateHR
-	AFTER INSERT ON RestingHRAccumulate
+CREATE OR REPLACE TRIGGER updateBP
+	AFTER INSERT ON BloodPRAccumulate
 	FOR EACH ROW
-	EXECUTE PROCEDURE check_hr();
+	EXECUTE PROCEDURE check_bpr();
 	
 -- Bill Triggers
+CREATE OR REPLACE FUNCTION member_join_session()
+    returns TRIGGER
+    language plpgsql
+AS
+$$
+begin
+	INSERT INTO Billings(member_id, bill_type, bill_value, date_billed, bill_paid)
+	VALUES(NEW.member_id, 'Private Session', 25.00, CURRENT_DATE, FALSE);
+	RETURN NEW;
+end;
+$$;
+
+CREATE OR REPLACE TRIGGER generateSessionBill
+	AFTER INSERT ON PrivateSessions
+	FOR EACH ROW
+	EXECUTE PROCEDURE member_join_session();
+
+
+CREATE OR REPLACE FUNCTION member_join_class()
+    returns TRIGGER
+    language plpgsql
+AS
+$$
+begin
+	INSERT INTO Billings(member_id, bill_type, bill_value, date_billed, bill_paid)
+	VALUES(NEW.member_id, 'Group Class', 35.00, CURRENT_DATE, FALSE);
+	RETURN NEW;
+end;
+$$;
+
+CREATE OR REPLACE TRIGGER generateClassBill
+	AFTER INSERT ON classmembers
+	FOR EACH ROW
+	EXECUTE PROCEDURE member_join_class();
