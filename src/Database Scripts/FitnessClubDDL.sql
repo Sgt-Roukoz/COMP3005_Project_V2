@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS GymMembers (
 	first_name varchar(255) NOT NULL,
 	last_name varchar(255) NOT NULL,
 	card_num varchar(255) NOT NULL,
-	pin int NOT NULL
+	pin varchar(4) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS Rooms (
