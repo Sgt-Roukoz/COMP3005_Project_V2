@@ -7,6 +7,14 @@ VALUES(2, 'Secondary Class', 2, 1);
 INSERT INTO RoomBookings
 VALUES(1, '2024-04-21', '19:00', '23:00');
 
+INSERT INTO  TrainerLogin
+VALUES(1, 'jimBob', 'jimsPassword');
+
+INSERT INTO TrainerLogin
+VALUES(2, 'dig', 'digsPassword');
+
+INSERT INTO TrainerLogin
+VALUES(3, 'dug', 'dugsPassword');
 
 INSERT INTO groupclasses(trainer_id, class_name, exercise_routine, room_id)
 VALUES(1, 'YDK Strength by Jim Bob', 2, 2);

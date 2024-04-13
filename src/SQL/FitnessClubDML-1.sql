@@ -15,4 +15,4 @@ INSERT INTO exerciseroutines(routine_desc)
 VALUES('100 Pushups, 100 Situps, 10KM Run\n');
 
 INSERT INTO exerciseroutines(routine_desc)
-VALUES('20 Crunches,30 Dumbell Rows,10 Pushups,30Squats');
+VALUES('20 Crunches,30 Dumbell Rows,10 Pushups,30 Squats');

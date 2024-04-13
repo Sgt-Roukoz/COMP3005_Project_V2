@@ -85,8 +85,9 @@ CREATE TABLE IF NOT EXISTS Billings (
 CREATE TABLE IF NOT EXISTS Equipment (
 	equip_id SERIAL PRIMARY KEY,
 	equip_name varchar(255) NOT NULL,
-	room_booked BOOLEAN NOT NULL,
-	last_inspect DATE NOT NULL
+	room INT NOT NULL,
+	last_inspect DATE NOT NULL,
+	FOREIGN KEY (room) REFERENCES Rooms(room_id)
 );
 
 CREATE TABLE IF NOT EXISTS GymAdmin (
