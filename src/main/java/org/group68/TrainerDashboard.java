@@ -310,7 +310,7 @@ public class TrainerDashboard extends JFrame{
                 }
                 try{ //If the routine id was entered
                     statement = databaseConnection.createStatement();
-                    SQL = "UPDATE ExerciseRoutines SET routine_desc = " + desc + " FROM ExerciseRoutines WHERE routine_id = " + d;
+                    SQL = "UPDATE ExerciseRoutines SET routine_desc = '" + desc + "' FROM ExerciseRoutines WHERE routine_id = " + d;
                     statement.executeQuery(SQL);
                 }catch (SQLException e){
                     e.printStackTrace();
@@ -322,7 +322,7 @@ public class TrainerDashboard extends JFrame{
         }else{
             try{ //If ID wasn't entered
                 statement = databaseConnection.createStatement();
-                SQL = "INSERT INTO ExerciseRoutines (routine_desc) VALUES (" + desc +")";
+                SQL = "INSERT INTO ExerciseRoutines (routine_desc) VALUES ('" + desc +"')";
                 statement.executeQuery(SQL);
             }catch (SQLException ex){
                 ex.printStackTrace();
@@ -368,9 +368,9 @@ public class TrainerDashboard extends JFrame{
             String SQL = "SELECT trainer_id, class_id, class_name, room_id, booking_date, start_time, end_time FROM GroupClasses JOIN RoomBookings ON GroupClasses.room_id = RoomBookings.room_id WHERE trainer_id = " + this.trainerID;
             ResultSet rs = statement.executeQuery(SQL);
             while(rs.next()){
-                String cid = rs.getString("class_id");
+                int cid = rs.getInt("class_id");
                 String cname = rs.getString("class_name");
-                String roomNum = rs.getString("room_id");
+                int roomNum = rs.getInt("room_id");
                 String bookingDate = rs.getString("booking_date");
                 String startTime = rs.getString("start_time");
                 String endTime = rs.getString("end_time");
@@ -407,7 +407,7 @@ public class TrainerDashboard extends JFrame{
      * */
     private void yeetTableContents(String tobeYeeted) throws SQLException{
         Statement stmt = databaseConnection.createStatement();
-        String SQL = "DELETE FROM " + tobeYeeted + " WHERE trainer_id ="+ trainerID +";";
+        String SQL = "DELETE FROM " + tobeYeeted + " WHERE trainer_id = "+ trainerID;
         ResultSet rs = stmt.executeQuery(SQL);
         rs.close();
     }
@@ -518,7 +518,7 @@ public class TrainerDashboard extends JFrame{
         String endTime = getTimeAttribute(ender);
 
         SQL = "INSERT INTO TrainerAvailability (trainer_id, available_day, start_time, end_time) VALUES (" +
-                trainerID + ", " + availableDayAttribute + ", " + startTime + ", " + endTime;
+                trainerID + ", '" + availableDayAttribute + "', '" + startTime + "', '" + endTime + "'";
         ResultSet rs = stmt.executeQuery(SQL);
         rs.close();
     }
@@ -650,7 +650,7 @@ public class TrainerDashboard extends JFrame{
      * */
     private void displayTrainerSchedule() throws SQLException {
         Statement stmt = databaseConnection.createStatement();
-        String SQL = "SELECT available_day, start_time, end_time FROM TrainerAvailability WHERE trainer_id =" + trainerID;
+        String SQL = "SELECT available_day, start_time, end_time FROM TrainerAvailability WHERE trainer_id = " + trainerID;
         ResultSet rs = stmt.executeQuery(SQL); // Process the result
         while(rs.next()){
             String day = rs.getDate("available_day").toString();
@@ -725,7 +725,7 @@ public class TrainerDashboard extends JFrame{
         try{
             Statement stmt = databaseConnection.createStatement();
 
-            String SQL = "SELECT member_id, email, join_date, phone, first_name, last_name FROM GymMembers WHERE first_name = " + fname + " AND last_name = " + lname;
+            String SQL = "SELECT member_id, email, join_date, phone, first_name, last_name FROM GymMembers WHERE first_name = '" + fname + "' AND last_name = '" + lname + "'";
             ResultSet rs = stmt.executeQuery(SQL); // Process the result
             Integer member_id = rs.getInt("member_id");
             memID = member_id;
@@ -764,7 +764,7 @@ public class TrainerDashboard extends JFrame{
         }
         try{
             Statement stmt = databaseConnection.createStatement();
-            String SQL = "SELECT member_id, weight, resting_hr, blood_pressure FROM Metrics WHERE member_id = " + id + ";";
+            String SQL = "SELECT member_id, weight, resting_hr, blood_pressure FROM Metrics WHERE member_id = " + id;
             ResultSet rs = stmt.executeQuery(SQL); // Process the result
             while(rs.next()){
                 Integer weight = rs.getInt("weight");

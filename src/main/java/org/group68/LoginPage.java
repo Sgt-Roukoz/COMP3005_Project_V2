@@ -19,14 +19,14 @@ public class LoginPage extends JFrame{
     private JLabel password;
     private JComboBox memberType;
     private JLabel iAm;
-    private JLabel error;
+    private JLabel validityError;
     private JTextField firstname;
     private JTextField lastname;
     private JPanel register;
     private JTextField phone;
     private JTextField cardNumber;
     private JPasswordField pin;
-    private JButton registerButton;
+    private JButton saveDetailsButton;
     private JLabel pinText;
     private JLabel cardnumText;
     private JLabel emailText;
@@ -40,20 +40,21 @@ public class LoginPage extends JFrame{
     private JLabel bpText;
     private JLabel weightText;
     private JFormattedTextField email;
-    private JLabel invalid;
-    private JLabel registryFields;
+    private JLabel emptyFieldsError;
+    private JLabel registryFieldsError;
     private JLabel userName;
     private JLabel pWord;
     private JTextField userEntered;
     private JTextField passEntered;
     private JButton createLogin;
     private JLabel success;
+    private JLabel savedSucc;
     private Connection connection;
     public LoginPage(Connection connection){
         this.connection = connection;
-        error.setVisible(false);
-        invalid.setVisible(false);
-        registryFields.setVisible(false);
+        validityError.setVisible(false);
+        emptyFieldsError.setVisible(false);
+        registryFieldsError.setVisible(false);
         success.setVisible(false);
         LafManager.setTheme(new DarculaTheme());
         LafManager.install();
@@ -65,7 +66,7 @@ public class LoginPage extends JFrame{
             }
         });
 
-        registerButton.addActionListener(new ActionListener() {
+        saveDetailsButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 enterRegisterDetails();
@@ -99,30 +100,25 @@ public class LoginPage extends JFrame{
             Statement stmt = connection.createStatement();
             String SQL;
             try {
-                SQL = "INSERT INTO MemberLogins (member_username, member_password) VALUES ("+ user + ", " + pword  + ") ";
+                SQL = "INSERT INTO MemberLogins (member_username, member_password) VALUES ('"+ user + "', '" + pword  + "') ";
                 stmt.executeQuery(SQL); // Process the result
-                firstname.setEnabled(true);
-                lastname.setEnabled(true);
-                phone.setEnabled(true);
-                email.setEnabled(true);
-                cardNumber.setEnabled(true);
-                pin.setEnabled(true);
-                restingHR.setEnabled(true);
-                bloodPressure.setEnabled(true);
-                weight.setEnabled(true);
                 userEntered.setText("");
                 passEntered.setText("");
-                userEntered.setEnabled(false);
-                passEntered.setEnabled(false);
-                createLogin.setEnabled(false);
-                registerButton.setEnabled(true);
             }catch (Exception e){
-                error.setVisible(true);
+                validityError.setVisible(true);
+                return;
             }
         }catch (SQLException x){
             x.printStackTrace();
-            error.setVisible(true);
+            validityError.setVisible(true);
+            return;
         }
+        success.setVisible(true);
+        saveDetailsButton.setEnabled(false);
+        createLogin.setEnabled(false);
+        validityError.setVisible(false);
+        emptyFieldsError.setVisible(false);
+        registryFieldsError.setVisible(false);
     }
 
     /**
@@ -143,10 +139,10 @@ public class LoginPage extends JFrame{
                 switch (authority){
                     case "Member":
                         try {
-                            SQL = "SELECT member_id, member_username, member_password FROM MemberLogins WHERE member_username = " + user;
+                            SQL = "SELECT member_id, member_username, member_password FROM MemberLogins WHERE member_username = '" + user + "'";
                             rs = stmt.executeQuery(SQL); // Process the result
                         }catch (Exception e){
-                            error.setVisible(true);
+                            validityError.setVisible(true);
                             break;
                         }
                         while(rs.next()){
@@ -158,7 +154,7 @@ public class LoginPage extends JFrame{
                                 this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
                                 break;
                             }else{
-                                error.setVisible(true);
+                                validityError.setVisible(true);
                             }
                         }
                         // Close resources
@@ -166,10 +162,10 @@ public class LoginPage extends JFrame{
                         break;
                     case "Trainer":
                         try {
-                            SQL = "SELECT trainer_id, trainer_username, trainer_password FROM TrainerLogin WHERE trainer_username = " + user;
+                            SQL = "SELECT trainer_id, trainer_username, trainer_password FROM TrainerLogin WHERE trainer_username = '" + user + "'";
                             rs = stmt.executeQuery(SQL); // Process the result
                         }catch (Exception e){
-                            error.setVisible(true);
+                            validityError.setVisible(true);
                             break;
                         }
                         while(rs.next()){
@@ -181,7 +177,7 @@ public class LoginPage extends JFrame{
                                 this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
                                 break;
                             }else{
-                                error.setVisible(true);
+                                validityError.setVisible(true);
                             }
                         }
                         // Close resources
@@ -189,15 +185,14 @@ public class LoginPage extends JFrame{
                         break;
                     case "Administrator":
                         try {
-                            SQL = "SELECT admin_id, admin_username, admin_password FROM AdminLogin WHERE admin_username = " + user;
+                            SQL = "SELECT admin_id, admin_username, admin_password FROM AdminLogin WHERE admin_username = '" + user + "'";
                             rs = stmt.executeQuery(SQL); // Process the result
                         }catch (Exception e){
-                            error.setVisible(true);
+                            validityError.setVisible(true);
                             break;
                         }
 
                         while(rs.next()){
-                            int adminID = rs.getInt("admin_id");
                             String adminPassword = rs.getString("admin_password");
                             if(adminPassword.equals(pword)){
                                 AdminDashboard newInstance = new AdminDashboard(connection);
@@ -205,21 +200,21 @@ public class LoginPage extends JFrame{
                                 this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
                                 break;
                             }else{
-                                error.setVisible(true);
+                                validityError.setVisible(true);
                             }
                         }
                         // Close resources
                         rs.close();
                         break;
                     default:
-                        error.setVisible(true);
+                        validityError.setVisible(true);
                 }
             }else{
-                error.setVisible(true);
+                validityError.setVisible(true);
             }
         }catch (SQLException x){
             x.printStackTrace();
-            error.setVisible(true);
+            validityError.setVisible(true);
         }
     }
 
@@ -245,31 +240,40 @@ public class LoginPage extends JFrame{
 
                 Statement stmt = connection.createStatement();
                 createGymMembersTuple(fname, lname, emailInfo, phoneNum, cardNum, pinny, SQLtoday, stmt);
-                String SQL;
                 Integer newestMemberID = getMemberID(emailInfo, stmt);
 
                 if(newestMemberID == 0){
-                    registryFields.setVisible(false);
+                    registryFieldsError.setVisible(false);
                     return;
                 }
 
-                Date today = new Date();
-                today.setHours(0);
+                enterWeight(weighty, stmt, newestMemberID, SQLtoday);
 
-                java.sql.Date sqlDate = new java.sql.Date(today.getTime());
+                enterHeartRate(heartRate, stmt, newestMemberID, SQLtoday);
 
-                enterWeight(weighty, stmt, newestMemberID, sqlDate);
+                enterBloodPressure(pressure, stmt, newestMemberID, SQLtoday);
 
-                enterHeartRate(heartRate, stmt, newestMemberID, sqlDate);
+                savedSucc.setVisible(true);
 
-                enterBloodPressure(pressure, stmt, newestMemberID, sqlDate);
+                firstname.setEnabled(false);
+                lastname.setEnabled(false);
+                phone.setEnabled(false);
+                email.setEnabled(false);
+                cardNumber.setEnabled(false);
+                pin.setEnabled(false);
+                restingHR.setEnabled(false);
+                bloodPressure.setEnabled(false);
+                weight.setEnabled(false);
 
-                success.setVisible(true);
+                userEntered.setEnabled(true);
+                passEntered.setEnabled(true);
+                createLogin.setEnabled(true);
+
             }else{
-                invalid.setVisible(true);
+                emptyFieldsError.setVisible(true);
             }
         }catch (SQLException ex){
-            registryFields.setVisible(true);
+            registryFieldsError.setVisible(true);
             ex.printStackTrace();
         }
     }
@@ -285,11 +289,11 @@ public class LoginPage extends JFrame{
     private void enterWeight(String weighty, Statement stmt, Integer newestMemberID, java.sql.Date sqlDate) {
         String SQL;
         try{
-            SQL = "UPDATE WeightAccumulate (weight, date_logged) SET weight = " + weighty + ", date_logged = " + sqlDate + " WHERE member_id = " + newestMemberID;
+            SQL = "UPDATE WeightAccumulate (weight, date_logged) SET weight = " + weighty + ", date_logged = '" + sqlDate + "' WHERE member_id = " + newestMemberID;
             stmt.executeQuery(SQL);
         }catch (SQLException e){
             e.printStackTrace();
-            registryFields.setVisible(true);
+            registryFieldsError.setVisible(true);
         }
     }
 
@@ -304,11 +308,11 @@ public class LoginPage extends JFrame{
     private void enterHeartRate(String heartRate, Statement stmt, Integer newestMemberID, java.sql.Date sqlDate) {
         String SQL;
         try{
-            SQL = "UPDATE RestingHRAccumulate (resting_hr, date_logged) SET weight = " + heartRate + ", date_logged = " + sqlDate + " WHERE member_id = " + newestMemberID + ";";
+            SQL = "UPDATE RestingHRAccumulate (resting_hr, date_logged) SET resting_hr = " + heartRate + ", date_logged = '" + sqlDate + "' WHERE member_id = " + newestMemberID;
             stmt.executeQuery(SQL);
         }catch (SQLException e){
             e.printStackTrace();
-            registryFields.setVisible(true);
+            registryFieldsError.setVisible(true);
         }
     }
 
@@ -323,11 +327,11 @@ public class LoginPage extends JFrame{
     private void enterBloodPressure(String pressure, Statement stmt, Integer newestMemberID, java.sql.Date sqlDate) {
         String SQL;
         try{
-            SQL = "UPDATE BloodPRAccumulate (blood_pr, date_logged) SET weight = " + pressure + ", date_logged = " + sqlDate + " WHERE member_id = " + newestMemberID + ";";
+            SQL = "UPDATE BloodPRAccumulate (blood_pr, date_logged) SET blood_pr = '" + pressure + "', date_logged = '" + sqlDate + "' WHERE member_id = " + newestMemberID;
             stmt.executeQuery(SQL);
         }catch (SQLException e){
             e.printStackTrace();
-            registryFields.setVisible(true);
+            registryFieldsError.setVisible(true);
         }
     }
 
@@ -342,7 +346,7 @@ public class LoginPage extends JFrame{
     private Integer getMemberID(String emailInfo, Statement stmt) {
         Integer newestMemberID;
         try{
-            String secondSQL = "SELECT member_id FROM GymMembers WHERE email = " + emailInfo + ";";
+            String secondSQL = "SELECT member_id FROM GymMembers WHERE email = '" + emailInfo + "'";
             ResultSet r = stmt.executeQuery(secondSQL);
             while(r.next()){
                 newestMemberID = r.getInt("member_id");
@@ -351,7 +355,6 @@ public class LoginPage extends JFrame{
             r.close();
         }catch (SQLException e){
             e.printStackTrace();
-            error.setVisible(true);
         }
         return 0;
     }
@@ -369,14 +372,13 @@ public class LoginPage extends JFrame{
      * @param stmt the SQL statement used to execute the query
      * */
     private void createGymMembersTuple(String fname, String lname, String emailInfo, String phoneNum, String cardNum, String pinny, java.sql.Date today, Statement stmt) {
-        ResultSet rs;
         String SQL;
 
         try {
-            SQL = "INSERT INTO GymMembers (email, join_date, phone, first_name, last_name, card_num, pin) VALUES (" + emailInfo + ", " + today + ", " + phoneNum + ", " + fname + ", " + lname + ", " + cardNum + ", " + pinny + ");";
-            rs = stmt.executeQuery(SQL); // Process the result
+            SQL = "INSERT INTO GymMembers (email, join_date, phone, first_name, last_name, card_num, pin) VALUES ('" + emailInfo + "', '" + today + "', '" + phoneNum + "', '" + fname + "', '" + lname + "', '" + cardNum + "', '" + pinny + "'";
+            stmt.executeQuery(SQL); // Process the result
         }catch (SQLException e){
-            registryFields.setVisible(true);
+            registryFieldsError.setVisible(true);
             e.printStackTrace();
         }
     }
@@ -400,4 +402,5 @@ public class LoginPage extends JFrame{
             e.printStackTrace();
         }
     }
+
 }
