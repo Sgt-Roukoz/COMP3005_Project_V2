@@ -399,7 +399,7 @@
                   <scrollpane id="450d">
                     <constraints>
                       <grid row="0" column="0" row-span="1" col-span="9" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-                      <gridbag weightx="0.05" weighty="0.0"/>
+                      <gridbag weightx="0.05" weighty="0.05"/>
                     </constraints>
                     <properties/>
                     <border type="etched" title="Goals"/>
@@ -424,41 +424,25 @@
                   <grid id="89d12" layout-manager="GridBagLayout">
                     <constraints>
                       <grid row="2" column="0" row-span="1" col-span="10" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-                      <gridbag weightx="0.0" weighty="100.0"/>
+                      <gridbag weightx="0.0" weighty="0.05"/>
                     </constraints>
                     <properties/>
                     <border type="etched" title="Bills"/>
                     <children>
-                      <component id="1b35a" class="javax.swing.JButton" binding="paySelectedBillButton" default-binding="true">
-                        <constraints>
-                          <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-                          <gridbag weightx="0.0" weighty="0.0"/>
-                        </constraints>
-                        <properties>
-                          <text value="Pay Selected Bill"/>
-                        </properties>
-                      </component>
                       <scrollpane id="4b5c8">
                         <constraints>
                           <grid row="0" column="0" row-span="1" col-span="3" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-                          <gridbag weightx="0.1" weighty="0.1"/>
+                          <gridbag weightx="0.1" weighty="0.05"/>
                         </constraints>
                         <properties/>
                         <border type="none"/>
-                        <children/>
+                        <children>
+                          <component id="b6b1c" class="javax.swing.JTable" binding="billTable">
+                            <constraints/>
+                            <properties/>
+                          </component>
+                        </children>
                       </scrollpane>
-                      <hspacer id="2963b">
-                        <constraints>
-                          <grid row="1" column="0" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-                          <gridbag weightx="0.1" weighty="0.0"/>
-                        </constraints>
-                      </hspacer>
-                      <hspacer id="d0b1d">
-                        <constraints>
-                          <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
-                          <gridbag weightx="0.1" weighty="0.0"/>
-                        </constraints>
-                      </hspacer>
                     </children>
                   </grid>
                   <grid id="ded14" layout-manager="GridBagLayout">
@@ -767,7 +751,7 @@
                           <scrollpane id="7be98">
                             <constraints>
                               <grid row="0" column="0" row-span="1" col-span="5" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-                              <gridbag weightx="0.15" weighty="0.1"/>
+                              <gridbag weightx="0.16" weighty="0.1"/>
                             </constraints>
                             <properties/>
                             <border type="etched" title="Upcoming Private Sessions"/>
@@ -953,7 +937,7 @@
                       <grid id="7b577" layout-manager="GridBagLayout">
                         <constraints>
                           <grid row="0" column="0" row-span="1" col-span="1" vsize-policy="3" hsize-policy="3" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-                          <gridbag weightx="0.1" weighty="0.2"/>
+                          <gridbag weightx="0.09" weighty="0.2"/>
                         </constraints>
                         <properties/>
                         <border type="none"/>
@@ -961,7 +945,7 @@
                           <scrollpane id="30a7b">
                             <constraints>
                               <grid row="0" column="0" row-span="1" col-span="3" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
-                              <gridbag weightx="0.1" weighty="0.1"/>
+                              <gridbag weightx="0.09" weighty="0.1"/>
                             </constraints>
                             <properties/>
                             <border type="etched" title="Upcoming Group Classes"/>

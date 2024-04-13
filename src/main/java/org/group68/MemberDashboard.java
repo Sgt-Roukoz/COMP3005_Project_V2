@@ -6,6 +6,7 @@ import com.github.weisj.darklaf.theme.DarculaTheme;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.plaf.nimbus.State;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -64,7 +65,6 @@ public class MemberDashboard extends JFrame {
     private JButton cancelClass;
     private JButton joinClassButton;
     private JComboBox routineSelector;
-    private JButton paySelectedBillButton;
     private JTextField usernameField;
     private JTextField emailField;
     private JPasswordField currentPass;
@@ -92,10 +92,11 @@ public class MemberDashboard extends JFrame {
     private JPasswordField cardPinField;
     private JTextField cardNumField;
     private JButton cardButton;
+    private JTable billTable;
     private Map<Integer, GroupClass> availableClasses;
 
     //models
-    private DefaultTableModel classesModel, sessionsModel, achievementmodel, goalmodel;
+    private DefaultTableModel classesModel, sessionsModel, achievementmodel, goalmodel, billmodel;
 
     //Member Data
     private int memberID;
@@ -198,6 +199,7 @@ public class MemberDashboard extends JFrame {
                 String[] items = classSelector.getSelectedItem().toString().split(" ");
 
                 joinSelectedClass(Integer.valueOf(items[0]));
+                getBills();
             }
         });
 
@@ -213,6 +215,8 @@ public class MemberDashboard extends JFrame {
 
                 bookNewSession(trainerid, routine, day, start_time);
                 setUpSessionsValues();
+
+                getBills();
             }
         });
 
@@ -648,6 +652,9 @@ public class MemberDashboard extends JFrame {
     }
 
 
+    /**
+     * Resets Sessions and classes table
+     */
     private void resetClassSection() {
         setUpSessionsClasses();
         GetAvailableClasses();
@@ -801,7 +808,7 @@ public class MemberDashboard extends JFrame {
     }
 
     /**
-     * Setting up initial metrics for member dashboard
+     * Setting up initial metrics, achievements, classes, and bills
      */
     private void setUpInitialValues() {
         setMetricNames();
@@ -809,8 +816,12 @@ public class MemberDashboard extends JFrame {
         setUpAchievements();
         setUpSessionsClasses();
         setRoutine();
+        setUpBills();
     }
 
+    /**
+     * Set member name and routines in dashboard
+     */
     private void setMetricNames() {
         try {
             Statement statement = databaseConnection.createStatement();
@@ -828,6 +839,9 @@ public class MemberDashboard extends JFrame {
         }
     }
 
+    /**
+     * Re-sets values for metrics and statistics in dashboard
+     */
     private void resetMetrics() {
         try {
             Statement statement = databaseConnection.createStatement();
@@ -1174,6 +1188,54 @@ public class MemberDashboard extends JFrame {
             getRoutineId.close();
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+    }
+
+    protected void setUpBills()
+    {
+        billmodel = new DefaultTableModel();
+        billmodel.addColumn("Type");
+        billmodel.addColumn("Value");
+        billmodel.addColumn("Date Billed");
+        billmodel.addColumn("Bill Paid");
+
+        billTable.setModel(billmodel);
+        JTextField tf = new JTextField();
+        tf.setEditable(false);
+        DefaultCellEditor editor = new DefaultCellEditor( tf );
+        billTable.setDefaultEditor(Object.class, editor);
+
+        getBills();
+    }
+
+    protected void getBills()
+    {
+        billmodel.setRowCount(0);
+        try {
+            Statement billstatement = databaseConnection.createStatement();
+            String msg = "SELECT *\n" +
+                    "FROM billings\n" +
+                    "WHERE member_id = " + memberID;
+            billstatement.executeQuery(msg);
+
+            ResultSet set = billstatement.getResultSet();
+
+            while (set.next())
+            {
+                String paid = set.getString("bill_paid");
+                if (paid.equals("t")) paid = "Yes";
+                else if (paid.equals("f")) paid = "No";
+                billmodel.addRow(new Object[]{set.getString("bill_type"),
+                        set.getString("bill_value"),
+                        set.getString("date_billed"),
+                        paid});
+            }
+
+            set.close();
+            billstatement.close();
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
