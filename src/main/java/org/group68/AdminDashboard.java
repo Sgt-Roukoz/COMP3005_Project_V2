@@ -1,11 +1,18 @@
+/**
+ * The Admin dashboard, to be used by Fitness Club Admins. It manages room bookings, equipment, billing, group classes, and can view exercise routines.
+ *
+ * @author Eric Wang
+ * @version 04/13/2024
+ */
+
 package org.group68;
 
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
 import java.awt.*;
-import java.nio.channels.SelectableChannel;
 import java.sql.*;
 
 public class AdminDashboard extends JFrame {
@@ -24,7 +31,7 @@ public class AdminDashboard extends JFrame {
         this.databaseConnection = databaseConnection;
 
         setTitle("Admin Dashboard");
-        mainPane = new JPanel();
+        mainPane = new JPanel(new GridBagLayout());
         setContentPane(mainPane);
         JMenuBar menuBar = new JMenuBar();
 
@@ -82,12 +89,19 @@ public class AdminDashboard extends JFrame {
 
         this.setJMenuBar(menuBar);
 
+        //table model setup
         roomsTable = new DefaultTableModel(new String[] {"room_id", "booking_date", "start_time", "end_time"}, 0);
         equipmentTable = new DefaultTableModel(new String[] {"equip_id", "name", "room", "last_inspect"}, 0);
         classesTable = new DefaultTableModel(new String[] {"class_id", "trainer_id", "class_name", "exercise_routine", "room_id"}, 0);
         billingTable = new DefaultTableModel(new String[] {"bill_id", "member_id", "bill_type", "bill_value", "date_billed", "bill_paid"}, 0);
         routinesTable = new DefaultTableModel(new String[] {"routine_id", "routine_desc"}, 0);
 
+        //one DatabaseEditor per table
+        roomsTable.addTableModelListener(new DatabaseEditor(databaseConnection, roomsTable, "RoomBookings"));
+        equipmentTable.addTableModelListener(new DatabaseEditor(databaseConnection, equipmentTable, "equipment"));
+        classesTable.addTableModelListener(new DatabaseEditor(databaseConnection, classesTable, "groupclasses"));
+        billingTable.addTableModelListener(new DatabaseEditor(databaseConnection, billingTable, "billings"));
+        routinesTable.addTableModelListener(new DatabaseEditor(databaseConnection, routinesTable, "exerciseroutines"));
 
         mainTable = new JTable();
         mainTable.setModel(roomsTable);
@@ -96,9 +110,11 @@ public class AdminDashboard extends JFrame {
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setViewportView(mainTable);
 
-        JPanel panel = new JPanel(new FlowLayout());
-        panel.add(scrollPane);
-        this.add(panel);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.add(scrollPane, gbc);
+        this.add(panel, gbc);
 
         showRoom();
 
@@ -108,6 +124,9 @@ public class AdminDashboard extends JFrame {
         setVisible(true);
     }
 
+    /**
+     * Opens a popup window for input, and registers a new piece of equipment based on the given input.
+     */
     private void addEquipment() {
         System.out.println("add equipment");
         JTextField name = new JTextField();
@@ -131,6 +150,9 @@ public class AdminDashboard extends JFrame {
         }
     }
 
+    /**
+     * Opens a popup window for input, and creates a new row in the billing table based on the given input.
+     */
     private void processPayment() {
         System.out.println("process payment");
         JTextField member_id = new JTextField();
@@ -158,6 +180,9 @@ public class AdminDashboard extends JFrame {
         }
     }
 
+    /**
+     * Opens a popup window for input, and books a new group class based on the given input.
+     */
     private void bookClass() {
         System.out.println("book class");
         JTextField trainer_id = new JTextField();
@@ -191,6 +216,9 @@ public class AdminDashboard extends JFrame {
         }
     }
 
+    /**
+     * Opens a popup window for input, and registers a new room booking based on the given input.
+     */
     private void bookRoom() {
         System.out.println("book room");
         JTextField room_id = new JTextField();
@@ -218,6 +246,9 @@ public class AdminDashboard extends JFrame {
         }
     }
 
+    /**
+     * Displays the exercise routines table.
+     */
     private void showRoutines() {
         System.out.println("view routines");
         try {
@@ -236,6 +267,9 @@ public class AdminDashboard extends JFrame {
         currentTable = routinesTable;
     }
 
+    /**
+     * Displays the room bookings table.
+     */
     private void showRoom(){
         System.out.println("view room");
         try {
@@ -253,6 +287,9 @@ public class AdminDashboard extends JFrame {
         currentTable = roomsTable;
     }
 
+    /**
+     * Displays the equipment table.
+     */
     private void showEquipment(){
         System.out.println("equipment");
         try {
@@ -270,6 +307,9 @@ public class AdminDashboard extends JFrame {
         currentTable = equipmentTable;
     }
 
+    /**
+     * Displays the group classes table.
+     */
     private void showClasses(){
         System.out.println("classes");
         try {
@@ -287,6 +327,9 @@ public class AdminDashboard extends JFrame {
         currentTable = classesTable;
     }
 
+    /**
+     * Displays the billing table.
+     */
     private void showBilling(){
         System.out.println("billing");
 
@@ -305,8 +348,13 @@ public class AdminDashboard extends JFrame {
         currentTable = billingTable;
     }
 
+    /**
+     * Deletes the currently selected row from the currently shown table. If somehow multiple rows are selected, only deletes the first.
+     * If none are selected, does nothing.
+     */
     private void deleteRow(){
         int selected = mainTable.getSelectedRow();
+        if(selected == -1) return;
         System.out.println(selected);
         Statement stmt;
         if(currentTable == equipmentTable || currentTable == billingTable || currentTable == classesTable || currentTable == routinesTable) {
@@ -323,7 +371,7 @@ public class AdminDashboard extends JFrame {
                 }
 
                 else if (currentTable == routinesTable) {
-                    stmt.executeUpdate("DELETE FROM exerciseroutines WHERE routine_id = " + id + ";");
+                    JOptionPane.showMessageDialog(null, "You cannot delete exercise routines. Please contact the relevant trainer.", "ERROR", JOptionPane.ERROR_MESSAGE);
                     showRoutines();
                 }
                 else {
@@ -340,6 +388,54 @@ public class AdminDashboard extends JFrame {
                 stmt.executeUpdate("DELETE FROM roombookings WHERE room_id = " + mainTable.getValueAt(selected, 0) + " AND booking_date = " + mainTable.getValueAt(selected, 1) + " AND start_time = " + mainTable.getValueAt(selected, 2) + ";");
             } catch (SQLException e) {
                 e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * DatabaseEditor class updates the backing SQL table to match whenever a row in the JTable is updated by the admin.
+     * Row creation and deletion are handled elsewhere, this is only for updating existing rows.
+     */
+    public class DatabaseEditor implements TableModelListener {
+        private Connection conn;
+        private TableModel model;
+        private String tableName;
+        public DatabaseEditor(Connection conn, TableModel model, String tableName){
+            this.conn = conn;
+            this.model = model;
+            this.tableName = tableName;
+        }
+        @Override
+        public void tableChanged(TableModelEvent e) {
+            if(e.getType() == TableModelEvent.UPDATE) {
+                System.out.println("updated a row");
+                String columnName = model.getColumnName(e.getColumn());
+                Object value = model.getValueAt(e.getFirstRow(), e.getColumn());
+                if(tableName.equalsIgnoreCase("roombookings")) {
+                    JOptionPane.showMessageDialog(null, "All room bookings are final and unchangeable. Please delete this booking and create a new one.", "ERROR: Room Bookings cannot be modified", JOptionPane.ERROR_MESSAGE);
+                    showRoom();
+                }
+                else {
+                    try {
+                        Statement stmt = conn.createStatement();
+                        int id = (int) model.getValueAt(e.getFirstRow(), 0);
+                        if (value instanceof String) {
+                            String str = (String) value;
+                            System.out.println("UPDATE " + tableName + " SET " + columnName + " = " + str + " WHERE " + model.getColumnName(0) + " = " + id + ";");
+                            stmt.executeUpdate("UPDATE " + tableName + " SET " + columnName + " = '" + str + "' WHERE " + model.getColumnName(0) + " = " + id + ";");
+                        }
+                        else if (value instanceof Integer) {
+                            int intValue = (Integer) value;
+                            stmt.executeUpdate("UPDATE " + tableName + " SET " + columnName + " = " + intValue + " WHERE " + model.getColumnName(0) + " = " + id + ";");
+                        }
+                        else if (value instanceof Date) {
+                            String str = value.toString();
+                            stmt.executeUpdate("UPDATE " + tableName + " SET " + columnName + " = '" + str + "' WHERE " + model.getColumnName(0) + " = " + id + ";");
+                        }
+                    } catch (SQLException ex) {
+                        ex.printStackTrace();
+                    }
+                }
             }
         }
     }
