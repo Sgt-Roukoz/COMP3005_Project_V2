@@ -112,6 +112,8 @@ public class AdminDashboard extends JFrame {
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
+        gbc.weighty = 1.0;
+        gbc.weightx = 1.0;
         JPanel panel = new JPanel(new GridBagLayout());
         panel.add(scrollPane, gbc);
         this.add(panel, gbc);
@@ -457,6 +459,4 @@ public class AdminDashboard extends JFrame {
 
         AdminDashboard dashboard = new AdminDashboard(databaseConnection);
     }
-
-
 }
