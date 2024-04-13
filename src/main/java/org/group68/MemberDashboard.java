@@ -413,7 +413,7 @@ public class MemberDashboard extends JFrame {
                         checkExists.executeQuery(existsmsg);
                         ResultSet set = checkExists.getResultSet();
                         set.next();
-                        if (!set.getBoolean(1)) {
+                        if (set.getBoolean(1)) {
                             JOptionPane.showMessageDialog(null, "Invalid Email, Is it already registered?");
                             return;
                         }
@@ -465,7 +465,10 @@ public class MemberDashboard extends JFrame {
                             "SET card_num = '" + cardNum + "', pin = " + cardPin + "\n" +
                             "WHERE member_id = " + memberID;
                     cardChange.execute(cardMsg);
+                    cardChange.close();
 
+                    cardNumField.setText("");
+                    cardPinField.setText("");
                 } catch (SQLException ex) {
                     throw new RuntimeException(ex);
                 }
@@ -513,6 +516,13 @@ public class MemberDashboard extends JFrame {
                     statement.close();
                     resultSet.close();
 
+                    int selectedOption = JOptionPane.showConfirmDialog(null,
+                            "Are you sure you want to change your password?",
+                            "Choose",
+                            JOptionPane.YES_NO_OPTION);
+
+                    if (selectedOption == 1) return;
+
                     Statement updatePass = databaseConnection.createStatement();
                     String updatePasss = "UPDATE memberlogins\n" +
                             "SET member_password = '" + newPassword + "'\n" +
@@ -535,6 +545,49 @@ public class MemberDashboard extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String newusername = usernameField.getText();
+
+                if (newusername.isEmpty()) return;
+
+                try {
+                    Statement exists = databaseConnection.createStatement();
+                    String existsmsg = "SELECT EXISTS(\n" +
+                            "    SELECT 1 \n" +
+                            "   \tFROM memberlogins \n" +
+                            "    WHERE member_username = '" + newusername + "'\n" +
+                            "  );";
+                    exists.executeQuery(existsmsg);
+                    ResultSet set = exists.getResultSet();
+                    set.next();
+
+                    if (set.getBoolean(1)) {
+                        JOptionPane.showMessageDialog(null, "Username already taken");
+                        exists.close();
+                        set.close();
+                        return;
+                    }
+                    exists.close();
+                    set.close();
+
+                    int selectedOption = JOptionPane.showConfirmDialog(null,
+                            "Are you sure you want to change your username?",
+                            "Choose",
+                            JOptionPane.YES_NO_OPTION);
+
+                    if (selectedOption == 1) return;
+
+                    Statement updateUser = databaseConnection.createStatement();
+                    String updateUserr = "UPDATE memberlogins\n" +
+                            "SET member_username = '" + newusername + "'\n" +
+                            "WHERE member_id = " + memberID;
+                    updateUser.execute(updateUserr);
+
+                    updateUser.close();
+                    usernameField.setText("");
+
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+
             }
         });
     }
@@ -1006,6 +1059,9 @@ public class MemberDashboard extends JFrame {
         });
     }
 
+    /**
+     * Table model for the goals table
+     */
     public static class GoalModel extends DefaultTableModel {
         public GoalModel() {
             super(new String[]{"Goal"}, 0);
@@ -1017,6 +1073,9 @@ public class MemberDashboard extends JFrame {
         }
     }
 
+    /**
+     * Table model for achievements table
+     */
     public static class AchievementModel extends DefaultTableModel {
 
         public AchievementModel() {
