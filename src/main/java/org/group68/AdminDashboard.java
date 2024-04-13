@@ -95,7 +95,7 @@ public class AdminDashboard extends JFrame {
 
         //table model setup
         roomsTable = new DefaultTableModel(new String[] {"room_id", "booking_date", "start_time", "end_time"}, 0);
-        equipmentTable = new DefaultTableModel(new String[] {"equip_id", "name", "room", "last_inspect"}, 0);
+        equipmentTable = new DefaultTableModel(new String[] {"equip_id", "equip_name", "room", "last_inspect"}, 0);
         classesTable = new DefaultTableModel(new String[] {"class_id", "trainer_id", "class_name", "exercise_routine", "room_id"}, 0);
         billingTable = new DefaultTableModel(new String[] {"bill_id", "member_id", "bill_type", "bill_value", "date_billed", "bill_paid"}, 0);
         routinesTable = new DefaultTableModel(new String[] {"routine_id", "routine_desc"}, 0);
@@ -422,10 +422,13 @@ public class AdminDashboard extends JFrame {
                     JOptionPane.showMessageDialog(null, "All room bookings are final and unchangeable. Please delete this booking and create a new one.", "ERROR: Room Bookings cannot be modified", JOptionPane.ERROR_MESSAGE);
                     showRoom();
                 }
+                //else if(tableName == )
                 else {
                     try {
                         Statement stmt = conn.createStatement();
-                        int id = (int) model.getValueAt(e.getFirstRow(), 0);
+                        int id;
+                        if(model.getValueAt(e.getFirstRow(), 0) instanceof String) id = Integer.valueOf((String) model.getValueAt(e.getFirstRow(), 0));
+                        else id = (int) model.getValueAt(e.getFirstRow(), 0);
                         if (value instanceof String) {
                             String str = (String) value;
                             System.out.println("UPDATE " + tableName + " SET " + columnName + " = " + str + " WHERE " + model.getColumnName(0) + " = " + id + ";");
