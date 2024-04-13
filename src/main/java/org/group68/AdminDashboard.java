@@ -387,7 +387,8 @@ public class AdminDashboard extends JFrame {
         else {
             try {
                 stmt = databaseConnection.createStatement();
-                stmt.executeUpdate("DELETE FROM roombookings WHERE room_id = " + mainTable.getValueAt(selected, 0) + " AND booking_date = " + mainTable.getValueAt(selected, 1) + " AND start_time = " + mainTable.getValueAt(selected, 2) + ";");
+                stmt.executeUpdate("DELETE FROM roombookings WHERE room_id = " + mainTable.getValueAt(selected, 0) + " AND booking_date = '" + mainTable.getValueAt(selected, 1) + "' AND start_time = '" + mainTable.getValueAt(selected, 2) + "';");
+                showRoom();
             } catch (SQLException e) {
                 e.printStackTrace();
             }
