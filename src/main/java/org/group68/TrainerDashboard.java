@@ -131,6 +131,7 @@ public class TrainerDashboard extends JFrame{
     private JLabel IDErrorMessage;
     private JLabel descErrorMessage;
     private JLabel routineSucc;
+    private JLabel instructions;
     private int trainerID;
     private Connection databaseConnection;
     private DefaultTableModel model;
@@ -329,6 +330,9 @@ public class TrainerDashboard extends JFrame{
         }
 
         getRoutines(model, routineTable);
+        routineSucc.setVisible(true);
+        descErrorMessage.setVisible(false);
+        IDErrorMessage.setVisible(false);
 
     }
 
