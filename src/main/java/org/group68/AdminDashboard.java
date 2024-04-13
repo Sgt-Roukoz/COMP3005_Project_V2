@@ -18,6 +18,7 @@ public class AdminDashboard extends JFrame {
     private DefaultTableModel equipmentTable;
     private DefaultTableModel classesTable;
     private DefaultTableModel billingTable;
+    private DefaultTableModel routinesTable;
 
     public AdminDashboard(Connection databaseConnection) {
         this.databaseConnection = databaseConnection;
@@ -73,15 +74,24 @@ public class AdminDashboard extends JFrame {
         billing.add(payment);
         menuBar.add(billing);
 
+        JMenu routines = new JMenu("Exercise Routines");
+        JMenuItem viewRoutines = new JMenuItem("View Routines");
+        viewRoutines.addActionListener(e -> viewRoutines());
+        routines.add(viewRoutines);
+        menuBar.add(routines);
+
         this.setJMenuBar(menuBar);
 
         roomsTable = new DefaultTableModel(new String[] {"room_id", "booking_date", "start_time", "end_time"}, 0);
         equipmentTable = new DefaultTableModel(new String[] {"equip_id", "name", "room", "last_inspect"}, 0);
         classesTable = new DefaultTableModel(new String[] {"class_id", "trainer_id", "class_name", "exercise_routine", "room_id"}, 0);
         billingTable = new DefaultTableModel(new String[] {"bill_id", "member_id", "bill_type", "bill_value", "date_billed", "bill_paid"}, 0);
+        routinesTable = new DefaultTableModel(new String[] {"routine_id", "routine_desc"}, 0);
+
 
         mainTable = new JTable();
         mainTable.setModel(roomsTable);
+        mainTable.setAutoCreateRowSorter(true);
         currentTable = roomsTable;
         JScrollPane scrollPane = new JScrollPane();
         scrollPane.setViewportView(mainTable);
@@ -206,6 +216,23 @@ public class AdminDashboard extends JFrame {
             }
             showRoom();
         }
+    }
+
+    private void viewRoutines() {
+        System.out.println("view routines");
+        try {
+            routinesTable.setRowCount(0);
+            Statement stmt = databaseConnection.createStatement();
+            ResultSet rs = stmt.executeQuery("select * from exerciseroutines");
+            while (rs.next()) {
+                routinesTable.addRow(new Object[]{rs.getInt(1), rs.getString(2)});
+            }
+            rs.close();
+        } catch (SQLException e){
+            e.printStackTrace();
+        }
+        mainTable.setModel(routinesTable);
+        currentTable = routinesTable;
     }
 
     private void showRoom(){
