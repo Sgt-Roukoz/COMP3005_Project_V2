@@ -16,6 +16,9 @@ VALUES(2, 'dig', 'digsPassword');
 INSERT INTO TrainerLogin
 VALUES(3, 'dug', 'dugsPassword');
 
+INSERT INTO adminlogin
+VALUES(1, 'goatedAdmin', 'adminsPassword');
+
 INSERT INTO groupclasses(trainer_id, class_name, exercise_routine, room_id)
 VALUES(1, 'YDK Strength by Jim Bob', 2, 2);
 
