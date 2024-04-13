@@ -1,5 +1,8 @@
 package org.group68;
 
+import com.github.weisj.darklaf.LafManager;
+import com.github.weisj.darklaf.theme.DarculaTheme;
+
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
@@ -27,6 +30,7 @@ public class AdminDashboard extends JFrame {
         setTitle("Admin Dashboard");
         mainPane = new JPanel();
         setContentPane(mainPane);
+        LafManager.install(new DarculaTheme());
         JMenuBar menuBar = new JMenuBar();
 
         JMenu file = new JMenu("File");
@@ -92,7 +96,6 @@ public class AdminDashboard extends JFrame {
         JPanel panel = new JPanel(new FlowLayout());
         panel.add(scrollPane);
         this.add(panel);
-
         showRoom();
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
