@@ -435,6 +435,10 @@ public class AdminDashboard extends JFrame {
                             String str = value.toString();
                             stmt.executeUpdate("UPDATE " + tableName + " SET " + columnName + " = '" + str + "' WHERE " + model.getColumnName(0) + " = " + id + ";");
                         }
+                        else if (value instanceof Boolean) {
+                            String str = String.valueOf(value);
+                            stmt.executeUpdate("UPDATE " + tableName + " SET " + columnName + " = '" + str + "' WHERE " + model.getColumnName(0) + " = " + id + ";");
+                        }
                     } catch (SQLException ex) {
                         ex.printStackTrace();
                     }
