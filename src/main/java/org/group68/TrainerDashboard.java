@@ -4,6 +4,7 @@ import com.github.weisj.darklaf.LafManager;
 import com.github.weisj.darklaf.theme.DarculaTheme;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
@@ -120,9 +121,19 @@ public class TrainerDashboard extends JFrame{
     private JPanel upcoming;
     private JTextArea upcomingEvents;
     private JTable routineTable;
+    private JScrollPane routineScroll;
+    private JPanel editRoutines;
+    private JLabel idText;
+    private JTextField idEntered;
+    private JTextField descEntered;
+    private JLabel descText;
+    private JButton saveRoutine;
+    private JLabel IDErrorMessage;
+    private JLabel descErrorMessage;
+    private JLabel routineSucc;
     private int trainerID;
     private Connection databaseConnection;
-
+    private DefaultTableModel model;
     public TrainerDashboard(int trainerID, Connection connection){
         this.trainerID = trainerID;
         this.databaseConnection = connection;
@@ -247,10 +258,100 @@ public class TrainerDashboard extends JFrame{
 
         displayUpcoming();
 
+        model = new DefaultTableModel();
+
+        model.addColumn("Routine ID");
+        model.addColumn("Routine Description");
+
+        getRoutines(model, routineTable);
+
+        saveRoutine.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                saveRoutine(idEntered, descEntered);
+            }
+        });
+
+        IDErrorMessage.setVisible(false);
+        descErrorMessage.setVisible(false);
+        routineSucc.setVisible(false);
+
         this.setVisible(true);
         setContentPane(TrainerDashboard);
         this.pack();
 
+    }
+
+    /**
+     * Edits a routine added by the trainer in ExerciseRoutines. Adds a new one if no routine id was specified.
+     *
+     * @param ID the textfield holding the routine ID entered by the trainer
+     * @param description the textfield holding the routine description entered by the trainer
+     * */
+    private void saveRoutine(JTextField ID, JTextField description){
+        String id = ID.getText();
+        String desc = description.getText();
+        if(desc.equals("")){
+            descErrorMessage.setVisible(true);
+            return;
+        }
+
+        Statement statement;
+        String SQL;
+
+        int d;
+        if(!id.equals("")){
+            try {
+                d = Integer.parseInt(id);
+                if(d < 0){
+                    IDErrorMessage.setVisible(true);
+                    return;
+                }
+                try{ //If the routine id was entered
+                    statement = databaseConnection.createStatement();
+                    SQL = "UPDATE ExerciseRoutines SET routine_desc = " + desc + " FROM ExerciseRoutines WHERE routine_id = " + d;
+                    statement.executeQuery(SQL);
+                }catch (SQLException e){
+                    e.printStackTrace();
+                }
+            } catch (NumberFormatException nfe) {
+                IDErrorMessage.setVisible(true);
+                return;
+            }
+        }else{
+            try{ //If ID wasn't entered
+                statement = databaseConnection.createStatement();
+                SQL = "INSERT INTO ExerciseRoutines (routine_desc) VALUES (" + desc +")";
+                statement.executeQuery(SQL);
+            }catch (SQLException ex){
+                ex.printStackTrace();
+            }
+        }
+
+        getRoutines(model, routineTable);
+
+    }
+
+    /**
+     * Gets the routines from the ExerciseRoutines table and displays them on the routine JTable.
+     *
+     * @param model the DefaultTableModel that serves as the source for the JTable
+     * @param table the JTable displaying the ExerciseRoutines table to the trainer
+     * */
+    private void getRoutines(DefaultTableModel model, JTable table){
+        try{
+            Statement statement = databaseConnection.createStatement();
+            String SQL = "SELECT routine_id, routine_desc FROM ExerciseRoutines";
+            ResultSet rs = statement.executeQuery(SQL);
+            while(rs.next()){
+                String id = rs.getString("routine_id");
+                String desc = rs.getString("routine_desc");
+                model.addRow(new Object[]{id, desc});
+            }
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+        table.setModel(model);
     }
 
     /**
