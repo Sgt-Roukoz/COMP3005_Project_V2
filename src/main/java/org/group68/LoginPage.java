@@ -1,5 +1,8 @@
 package org.group68;
 
+import com.github.weisj.darklaf.LafManager;
+import com.github.weisj.darklaf.theme.DarculaTheme;
+
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -52,6 +55,8 @@ public class LoginPage extends JFrame{
         invalid.setVisible(false);
         registryFields.setVisible(false);
         success.setVisible(false);
+        LafManager.setTheme(new DarculaTheme());
+        LafManager.install();
 
         loginButton.addActionListener(new ActionListener() {
             @Override
@@ -70,9 +75,15 @@ public class LoginPage extends JFrame{
         createLogin.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-
+                setCreateLogin();
             }
         });
+
+        this.setVisible(true);
+
+        setContentPane(Login);
+        this.pack();
+
     }
 
     /**
@@ -80,6 +91,38 @@ public class LoginPage extends JFrame{
      * */
     public void setCreateLogin(){
         //Remember to enable register button
+        try{
+            String user;
+            String pword;
+            user = usernameField.getText();
+            pword = passwordField.getText();
+            Statement stmt = connection.createStatement();
+            String SQL;
+            try {
+                SQL = "INSERT INTO MemberLogins (member_username, member_password) VALUES ("+ user + ", " + pword  + ") ";
+                stmt.executeQuery(SQL); // Process the result
+                firstname.setEnabled(true);
+                lastname.setEnabled(true);
+                phone.setEnabled(true);
+                email.setEnabled(true);
+                cardNumber.setEnabled(true);
+                pin.setEnabled(true);
+                restingHR.setEnabled(true);
+                bloodPressure.setEnabled(true);
+                weight.setEnabled(true);
+                userEntered.setText("");
+                passEntered.setText("");
+                userEntered.setEnabled(false);
+                passEntered.setEnabled(false);
+                createLogin.setEnabled(false);
+                registerButton.setEnabled(true);
+            }catch (Exception e){
+                error.setVisible(true);
+            }
+        }catch (SQLException x){
+            x.printStackTrace();
+            error.setVisible(true);
+        }
     }
 
     /**
@@ -110,7 +153,7 @@ public class LoginPage extends JFrame{
                             int memberID = rs.getInt("member_id");
                             String memberPassword = rs.getString("member_password");
                             if(memberPassword.equals(pword)){
-                                MemberDashboard newInstance = new MemberDashboard(connection,memberID);
+                                MemberDashboard newInstance = new MemberDashboard(connection, memberID);
                                 newInstance.setVisible(true);
                                 this.dispatchEvent(new WindowEvent(this, WindowEvent.WINDOW_CLOSING));
                             }else{
@@ -330,9 +373,28 @@ public class LoginPage extends JFrame{
             SQL = "INSERT INTO GymMembers (email, join_date, phone, first_name, last_name, card_num, pin) VALUES (" + emailInfo + ", " + today + ", " + phoneNum + ", " + fname + ", " + lname + ", " + cardNum + ", " + pinny + ");";
             rs = stmt.executeQuery(SQL); // Process the result
         }catch (SQLException e){
-            error.setVisible(true);
+            registryFields.setVisible(true);
             e.printStackTrace();
         }
     }
-    
+
+    public static void main(String[] args) {
+        try {
+            Class.forName("org.postgresql.Driver");
+            String url = "jdbc:postgresql://localhost:5432/COMP3005";
+            String user = "postgres";
+            String password = "TFERPLGK";
+            Connection connection = DriverManager.getConnection(url, user, password);
+            Statement stmt = connection.createStatement();
+            if (connection != null){ System.out.println("Connected Successfully");
+
+                LoginPage page = new LoginPage(connection);
+
+
+            }
+            else System.out.println("Connection Failed");
+        } catch (SQLException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
 }

@@ -114,6 +114,10 @@ public class TrainerDashboard extends JFrame{
     private JLabel dataError;
     private JTextField bloodPressureDisplay;
     private JLabel bp;
+    private JPanel Routines;
+    private JPanel upcoming;
+    private JTextArea upcomingEvents;
+    private JTable table1;
     private int trainerID;
     private Connection databaseConnection;
 
@@ -147,6 +151,10 @@ public class TrainerDashboard extends JFrame{
         errorName.setVisible(false);
         timeError.setVisible(false);
         dataError.setVisible(false);
+
+        this.setVisible(true);
+        setContentPane(TrainerDashboard);
+        this.pack();
 
     }
 
@@ -459,6 +467,7 @@ public class TrainerDashboard extends JFrame{
     private void searchButtonPressed(){
         int memID = displayMemberInfo(memberField.getText());
         displayMemberMetrics(memID);
+        memberField.setText("");
     }
 
     /**
@@ -535,22 +544,32 @@ public class TrainerDashboard extends JFrame{
     }
 
     public static void main(String[] args) {
-        {
-            Connection databaseConnection = null;
-            try {
+
+//        String url = "jdbc:postgresql://localhost:5432/COMP3005";
+//        String user = "postgres";
+//        String password = "TFERPLGK";
+
+
+
+
+
+        try {
                 Class.forName("org.postgresql.Driver");
-                String url = "jdbc:postgresql://localhost:5432/Students";
+                String url = "jdbc:postgresql://localhost:5432/COMP3005";
                 String user = "postgres";
-                String password = "z3i0";
-                databaseConnection = DriverManager.getConnection(url, user, password);
-                if (databaseConnection != null) System.out.println("Connected Successfully");
+                String password = "TFERPLGK";
+                Connection connection = DriverManager.getConnection(url, user, password);
+                Statement stmt = connection.createStatement();
+                 if (connection != null){ System.out.println("Connected Successfully");
+
+                     new TrainerDashboard(1, connection);
+                 }
                 else System.out.println("Connection Failed");
             } catch (SQLException | ClassNotFoundException e) {
                 e.printStackTrace();
             }
 
-            new TrainerDashboard(1, databaseConnection);
         }
-    }
+
 
 }
