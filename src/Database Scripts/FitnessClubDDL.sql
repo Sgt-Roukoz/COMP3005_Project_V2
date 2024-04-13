@@ -186,6 +186,8 @@ begin
 	VALUES(NEW.member_id, 0, 0, 0, 0, 0, 0);
 	INSERT INTO Billings(member_id, bill_type, bill_value, date_billed, bill_paid)
 	VALUES(NEW.member_id, 'Membership Fee', 53.00, CURRENT_DATE, TRUE);
+	INSERT INTO Tracker
+	VALUES(NEW.member_id, null);
 	RETURN NEW;
 end;
 $$;

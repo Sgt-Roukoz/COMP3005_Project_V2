@@ -37,10 +37,11 @@ public class MemberDashboard extends JFrame {
     private JLabel hrIcon;
     private JLabel weightIcon;
     private JLabel bpIcon;
+
+    //
     private JButton achievementReset;
     private JButton achievementApply;
     private JTable achievementTable;
-    private JTable table1;
     private JButton addRoutine;
     private JTabbedPane dashboardPane;
     private JTable goaltable;
@@ -64,11 +65,11 @@ public class MemberDashboard extends JFrame {
     private JButton joinClassButton;
     private JComboBox routineSelector;
     private JButton paySelectedBillButton;
-    private JTextField textField1;
-    private JTextField textField2;
-    private JPasswordField passwordField1;
-    private JPasswordField passwordField2;
-    private JPasswordField passwordField3;
+    private JTextField usernameField;
+    private JTextField emailField;
+    private JPasswordField currentPass;
+    private JPasswordField newPass;
+    private JPasswordField confirmPass;
     private JButton changePasswordButton;
     private JButton changeEmailButton;
     private JButton changeUsernameButton;
@@ -87,6 +88,10 @@ public class MemberDashboard extends JFrame {
     private JButton applyGoals;
     private JLabel logStatus;
     private JButton resetButton;
+    private JTextArea routineTextArea;
+    private JPasswordField cardPinField;
+    private JTextField cardNumField;
+    private JButton cardButton;
     private Map<Integer, GroupClass> availableClasses;
 
     //models
@@ -103,7 +108,7 @@ public class MemberDashboard extends JFrame {
         availableClasses = new HashMap<>();
 
         LocalDate localDate = LocalDate.now();
-        LocalDate firstDayOfNextWeek = localDate.with(TemporalAdjusters.next(DayOfWeek.MONDAY));
+        LocalDate firstDayOfNextWeek = localDate.with(TemporalAdjusters.next(DayOfWeek.SATURDAY));
         List<LocalDate> remainingDays = localDate.datesUntil(firstDayOfNextWeek)
                 .collect(Collectors.toList());
         Vector<String> days = new Vector<>();
@@ -206,19 +211,19 @@ public class MemberDashboard extends JFrame {
                 String time = sessionTimeSelector.getSelectedItem().toString();
                 LocalTime start_time = LocalTime.parse(time);
 
-                System.out.println(start_time);
                 bookNewSession(trainerid, routine, day, start_time);
+                setUpSessionsValues();
             }
         });
 
         addRoutine.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                MemberRoutineDialog temp = new MemberRoutineDialog(memberID, databaseConnection);
-                temp.showDialog();
-                System.out.println("GOTCHAA");
+                new MemberRoutineSelect(memberID, databaseConnection);
+                setRoutine();
             }
         });
+
         changePasswordButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -250,14 +255,16 @@ public class MemberDashboard extends JFrame {
                         "Choose",
                         JOptionPane.YES_NO_OPTION);
 
-                System.out.println(selectedOption);
-
                 try {
                     Statement cancelSession = databaseConnection.createStatement();
-
+                    String msg = "DELETE FROM privatesessions\n" +
+                            "WHERE session_id = " + session_id;
+                    cancelSession.execute(msg);
                 } catch (SQLException ex) {
                     throw new RuntimeException(ex);
                 }
+
+                setUpSessionsValues();
             }
         });
 
@@ -383,6 +390,153 @@ public class MemberDashboard extends JFrame {
                 setUpAchievements();
             }
         });
+        changeEmailButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String email = emailField.getText().toString();
+                String emailregex = "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|" +
+                        "\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\" +
+                        "x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]" +
+                        "*[a-z0-9])?|\\[(?:(?:(2(5[0-5]|[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9]))\\.){3}(?:(2(5[0-5]|" +
+                        "[0-4][0-9])|1[0-9][0-9]|[1-9]?[0-9])|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-" +
+                        "\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)])";
+
+                if (email.matches(emailregex))
+                {
+                    try {
+                        Statement checkExists = databaseConnection.createStatement();
+                        String existsmsg = "SELECT EXISTS(\n" +
+                                "    SELECT 1 \n" +
+                                "   \tFROM gymmembers \n" +
+                                "    WHERE email = '" + email + "'\n" +
+                                "  );";
+                        checkExists.executeQuery(existsmsg);
+                        ResultSet set = checkExists.getResultSet();
+                        set.next();
+                        if (!set.getBoolean(1)) {
+                            JOptionPane.showMessageDialog(null, "Invalid Email, Is it already registered?");
+                            return;
+                        }
+
+                        Statement emailChange = databaseConnection.createStatement();
+                        String emailmsg =  "UPDATE gymmembers\n" +
+                                "SET email = '" + email + "'\n" +
+                                "WHERE member_id = " + memberID;
+                        emailChange.execute(emailmsg);
+                        emailChange.close();
+
+                        emailField.setText("");
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+            }
+        });
+
+        //change card information button listener
+        cardButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String cardNum = cardNumField.getText();
+                String cardPin = new String(cardPinField.getPassword());
+
+                String cardRegex = "^(?:4[0-9]{12}(?:[0-9]{3})?|[25][1-7][0-9]{14}|6(?:011|5[0-9][0-9])[0-9]{12}" +
+                        "|3[47][0-9]{13}|3(?:0[0-5]|[68][0-9])[0-9]{11}|(?:2131|1800|35\\d{3})\\d{11})$";
+
+                System.out.println(cardNum);
+                System.out.println(cardPin.matches("^[0-9]{3,4}$"));
+
+                if (!cardNum.matches(cardRegex) || !cardPin.matches("^[0-9]{3,4}$"))
+                {
+                    JOptionPane.showMessageDialog(null, "Invalid Card Information");
+                    return;
+                }
+
+                int selectedOption = JOptionPane.showConfirmDialog(null,
+                        "Are you sure you want to change this information?",
+                        "Choose",
+                        JOptionPane.YES_NO_OPTION);
+
+                if (selectedOption == 1) return;
+
+                try {
+                    Statement cardChange = databaseConnection.createStatement();
+                    String cardMsg =  "UPDATE gymmembers\n" +
+                            "SET card_num = '" + cardNum + "', pin = " + cardPin + "\n" +
+                            "WHERE member_id = " + memberID;
+                    cardChange.execute(cardMsg);
+
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
+        });
+
+        //change password button
+        changePasswordButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String currentPassword = new String(currentPass.getPassword());
+                String newPassword = new String(newPass.getPassword());
+                String newPasswordConfirm = new String(confirmPass.getPassword());
+
+                if (currentPassword.isEmpty() || newPassword.isEmpty() || newPasswordConfirm.isEmpty()) return;
+
+                try{
+                    Statement statement = databaseConnection.createStatement();
+                    statement.executeQuery("SELECT * FROM memberlogins WHERE member_id = " + memberID);
+                    ResultSet resultSet = statement.getResultSet();
+                    resultSet.next();
+
+                    if (!currentPassword.equals(resultSet.getString("member_password")))
+                    {
+                        JOptionPane.showMessageDialog(null, "Current Password doesn't match");
+                        statement.close();
+                        resultSet.close();
+                        return;
+                    }
+                    else if (newPassword.equals(resultSet.getString("member_password")))
+                    {
+                        JOptionPane.showMessageDialog(null, "New password must be different");
+                        statement.close();
+                        resultSet.close();
+                        return;
+                    }
+                    else if (!newPassword.equals(newPasswordConfirm))
+                    {
+                        JOptionPane.showMessageDialog(null, "Ensure that new passwords match");
+                        statement.close();
+                        resultSet.close();
+                        return;
+                    }
+
+                    statement.close();
+                    resultSet.close();
+
+                    Statement updatePass = databaseConnection.createStatement();
+                    String updatePasss = "UPDATE memberlogins\n" +
+                            "SET member_password = '" + newPassword + "'\n" +
+                            "WHERE member_id = " + memberID;
+                    updatePass.execute(updatePasss);
+
+                    currentPass.setText("");
+                    newPass.setText("");
+                    confirmPass.setText("");
+
+                } catch (SQLException ex) {
+                    throw new RuntimeException(ex);
+                }
+
+            }
+        });
+
+        //change current member's username
+        changeUsernameButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String newusername = usernameField.getText();
+            }
+        });
     }
 
     /**
@@ -491,7 +645,6 @@ public class MemberDashboard extends JFrame {
                         Integer.parseInt(trainerSet.getString("end_time").split(":")[1]));
                 trainerIntervals.put(trainerSet.getInt("trainer_id"), IntervalCollection.onClockAxis().plus(ClockInterval.between(startTime, endTime)));
             }
-            System.out.println(trainerIntervals);
             trainerSet.close();
             initTrainer.close();
 
@@ -598,9 +751,28 @@ public class MemberDashboard extends JFrame {
      * Setting up initial metrics for member dashboard
      */
     private void setUpInitialValues() {
+        setMetricNames();
         resetMetrics();
         setUpAchievements();
         setUpSessionsClasses();
+        setRoutine();
+    }
+
+    private void setMetricNames() {
+        try {
+            Statement statement = databaseConnection.createStatement();
+            statement.executeQuery("SELECT * FROM gymmembers WHERE member_id = " + memberID);
+            ResultSet resultSet = statement.getResultSet();
+            resultSet.next();
+
+            firstName.setText(resultSet.getString("first_name"));
+            lastName.setText(resultSet.getString("last_name"));
+            firstName.setFont(new Font("Jetbrains Mono", Font.BOLD, 18));
+            lastName.setFont(new Font("Jetbrains Mono", Font.BOLD, 18));
+            routineTextArea.setFont(new Font("Jetbrains Mono", Font.BOLD, 16));
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     private void resetMetrics() {
@@ -609,12 +781,29 @@ public class MemberDashboard extends JFrame {
             statement.executeQuery("SELECT * FROM metrics WHERE member_id = " + memberID);
             ResultSet resultSet = statement.getResultSet();
             resultSet.next();
-            hrIcon.setText(resultSet.getString("weight"));
+            hrIcon.setText(resultSet.getString("resting_hr") + " bpm");
             hrIcon.setFont(new Font("Jetbrains Mono", Font.BOLD, 15));
-            weightIcon.setText(resultSet.getString("resting_hr"));
+            weightIcon.setText(resultSet.getString("weight") + " lb");
             weightIcon.setFont(new Font("Jetbrains Mono", Font.BOLD, 15));
-            bpIcon.setText(resultSet.getString("blood_pressure"));
+            bpIcon.setText(resultSet.getString("blood_pressure") + " mmHg");
             bpIcon.setFont(new Font("Jetbrains Mono", Font.BOLD, 15));
+            statement.close();
+            resultSet.close();
+
+            statement = databaseConnection.createStatement();
+            String statMsg = "SELECT *\n" +
+                    "FROM memberstatistics\n" +
+                    "WHERE member_id = " + memberID;
+            statement.executeQuery(statMsg);
+            ResultSet statSet = statement.getResultSet();
+            statSet.next();
+            avgHR.setText(statSet.getString("avg_resting_hr"));
+            maxHR.setText(statSet.getString("max_resting_hr"));
+            minHR.setText(statSet.getString("min_resting_hr"));
+            avgWeight.setText(statSet.getString("avg_weight"));
+            maxWeight.setText(statSet.getString("max_weight"));
+            minWeight.setText(statSet.getString("min_weight"));
+
             statement.close();
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -646,7 +835,6 @@ public class MemberDashboard extends JFrame {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-        upcomingSessions.setDefaultEditor(Object.class, null);
         GetAvailableClasses();
 
     }
@@ -747,6 +935,7 @@ public class MemberDashboard extends JFrame {
         tf.setEditable(false);
         DefaultCellEditor editor = new DefaultCellEditor( tf );
         upcomingClasses.setDefaultEditor(Object.class, editor);
+        upcomingSessions.setDefaultEditor(Object.class, editor);
 
         //upcomingClasses.c
 
@@ -804,7 +993,6 @@ public class MemberDashboard extends JFrame {
         goaltable.getColumnModel().getColumn(0).setPreferredWidth(250);
         achievementTable.getColumnModel().getColumn(0).setPreferredWidth(250);
         achievementTable.getColumnModel().getColumn(1).setPreferredWidth(10);
-        System.out.println(achievementTable.getColumnModel().getColumn(1).getHeaderValue());
 
         goaltable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
@@ -816,10 +1004,7 @@ public class MemberDashboard extends JFrame {
                 removeGoal.setEnabled(!goaltable.getSelectionModel().isSelectionEmpty() && !goal.equals(""));
             }
         });
-
     }
-
-
 
     public static class GoalModel extends DefaultTableModel {
         public GoalModel() {
@@ -831,7 +1016,6 @@ public class MemberDashboard extends JFrame {
             return column == 0;
         }
     }
-
 
     public static class AchievementModel extends DefaultTableModel {
 
@@ -859,7 +1043,6 @@ public class MemberDashboard extends JFrame {
         @Override
         public void setValueAt(Object aValue, int row, int column) {
             if (aValue instanceof Boolean && column == 1) {
-                System.out.println(aValue);
                 var rowData = getDataVector().get(row);
                 rowData.set(1, (boolean) aValue);
                 fireTableCellUpdated(row, column);
@@ -867,7 +1050,9 @@ public class MemberDashboard extends JFrame {
         }
     }
 
-
+    /**
+     * Apply changes made to achievements table to database
+     */
     protected void applyAchievementChanges() {
         try {
             Statement statement = databaseConnection.createStatement();
@@ -882,7 +1067,6 @@ public class MemberDashboard extends JFrame {
                         statement.execute(message);
                     }
                 }
-                System.out.println(achievementmodel.getValueAt(i, 1));
             }
             statement.close();
         } catch (SQLException e) {
@@ -890,6 +1074,48 @@ public class MemberDashboard extends JFrame {
         }
 
         setUpAchievements();
+    }
+
+
+    /**
+     * Set routine text field
+     */
+    protected void setRoutine()
+    {
+        try {
+            Statement getRoutineId = databaseConnection.createStatement();
+            String msg = "SELECT * \n" +
+                    "FROM tracker\n" +
+                    "WHERE member_id = " + memberID;
+            getRoutineId.executeQuery(msg);
+            ResultSet routineSet = getRoutineId.getResultSet();
+
+            while (routineSet.next())
+            {
+                String text = routineSet.getString("exercise_routine");
+                Statement getRoutine = databaseConnection.createStatement();
+                String roumsg = "SELECT routine_desc\n" +
+                        "FROM exerciseroutines\n" +
+                        "WHERE routine_id = " + text;
+
+                getRoutine.executeQuery(roumsg);
+                ResultSet getSet = getRoutine.getResultSet();
+                getSet.next();
+                text = getSet.getString(1);
+
+                if (text == null) return;
+                text = text.replaceAll(", ", "\n");
+                text = text.replaceAll(",", "\n");
+                routineTextArea.setText(text);
+
+                getSet.close();
+                getRoutine.close();
+            }
+            routineSet.close();
+            getRoutineId.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public static void main(String[] args) {
@@ -907,7 +1133,7 @@ public class MemberDashboard extends JFrame {
             e.printStackTrace();
         }
 
-        new MemberDashboard(databaseConnection, 4);
+        new MemberDashboard(databaseConnection, 1);
     }
 
 }
