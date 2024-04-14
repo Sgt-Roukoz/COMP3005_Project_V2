@@ -365,7 +365,7 @@ public class TrainerDashboard extends JFrame{
         try{
             upcomingEvents.setText("Upcoming group classes: \n");
             Statement statement = databaseConnection.createStatement();
-            String SQL = "SELECT trainer_id, class_id, class_name, room_id, booking_date, start_time, end_time FROM GroupClasses JOIN RoomBookings ON GroupClasses.room_id = RoomBookings.room_id WHERE trainer_id = " + this.trainerID;
+            String SQL = "SELECT trainer_id, class_id, class_name, GroupClasses.room_id, booking_date, start_time, end_time FROM GroupClasses JOIN RoomBookings ON GroupClasses.room_id = RoomBookings.room_id WHERE trainer_id = " + this.trainerID;
             ResultSet rs = statement.executeQuery(SQL);
             while(rs.next()){
                 int cid = rs.getInt("class_id");
@@ -383,7 +383,7 @@ public class TrainerDashboard extends JFrame{
         try{
             upcomingEvents.setText("Upcoming private sessions: \n");
             Statement stmt = databaseConnection.createStatement();
-            String SQL = "SELECT trainer_id, member_id, set_routine, session_date, start_time, first_name, last_name FROM PrivateSessions JOIN GymMembers ON PrivateSessions.member_id = GymMembers.member_id  WHERE trainer_id = " + this.trainerID;
+            String SQL = "SELECT trainer_id, GymMembers.member_id, set_routine, session_date, start_time, first_name, last_name FROM PrivateSessions JOIN GymMembers ON PrivateSessions.member_id = GymMembers.member_id  WHERE trainer_id = " + this.trainerID;
             ResultSet rs = stmt.executeQuery(SQL);
             while(rs.next()){
                 String fname = rs.getString("first_name");
