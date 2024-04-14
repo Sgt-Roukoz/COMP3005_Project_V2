@@ -225,7 +225,9 @@ public class LoginPage extends JFrame{
      * */
     public void enterRegisterDetails() {
         try{
-            if(firstname.getText() != "" && lastname.getText() != "" && email.getText() != "@" && phone.getText() != "" && cardNumber.getText() != "" && pin.getText() != "" && restingHR.getText() != "" && weight.getText() != "" && bloodPressure.getText() != ""){
+            if(firstname.getText().equals("") || lastname.getText().equals("") || email.getText().equals("") || phone.getText().equals("") || cardNumber.getText().equals("") || pin.getText().equals("") || restingHR.getText().equals("") || weight.getText().equals("") || bloodPressure.getText().equals("")){
+                emptyFieldsError.setVisible(true);
+            }else{
                 String fname = firstname.getText();
                 String lname = lastname.getText();
                 String emailInfo = email.getText();
@@ -269,9 +271,6 @@ public class LoginPage extends JFrame{
                 userEntered.setEnabled(true);
                 passEntered.setEnabled(true);
                 createLogin.setEnabled(true);
-
-            }else{
-                emptyFieldsError.setVisible(true);
             }
         }catch (SQLException ex){
             registryFieldsError.setVisible(true);
@@ -376,7 +375,8 @@ public class LoginPage extends JFrame{
         String SQL;
 
         try {
-            SQL = "INSERT INTO GymMembers (email, join_date, phone, first_name, last_name, card_num, pin) VALUES ('" + emailInfo + "', '" + today + "', '" + phoneNum + "', '" + fname + "', '" + lname + "', '" + cardNum + "', '" + pinny + "'";
+            SQL = "INSERT INTO GymMembers (email, join_date, phone, first_name, last_name, card_num, pin) VALUES ('" + emailInfo + "', '" + today + "', '" + phoneNum + "', '" + fname + "', '" + lname + "', '" + cardNum + "', '" + pinny + "')";
+            System.out.println(SQL);
             stmt.executeQuery(SQL); // Process the result
         }catch (SQLException e){
             registryFieldsError.setVisible(true);

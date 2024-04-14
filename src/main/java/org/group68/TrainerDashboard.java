@@ -391,7 +391,7 @@ public class TrainerDashboard extends JFrame{
                 String setRoutine = rs.getString("set_routine");
                 String sessionDate = rs.getString("session_date");
                 String startTime = rs.getString("start_time");
-                upcomingEvents.append("Routine: " + setRoutine + "With member: " + fname + " " + lname + " \n Date: " + sessionDate + "\n Start time: " + startTime + "\n \n");
+                upcomingEvents.append("Routine: " + setRoutine + "\n With member: " + fname + " " + lname + " \n Date: " + sessionDate + "\n Start time: " + startTime + "\n \n");
             }
         }catch (SQLException e){
             e.printStackTrace();
@@ -649,6 +649,7 @@ public class TrainerDashboard extends JFrame{
      * Displays the current trainer's schedule in the availability JPanel by pulling it from the TrainerAvailability table.
      * */
     private void displayTrainerSchedule() throws SQLException {
+        System.out.println("SCHEDULE PRINTING");
         Statement stmt = databaseConnection.createStatement();
         String SQL = "SELECT available_day, start_time, end_time FROM TrainerAvailability WHERE trainer_id = " + trainerID;
         ResultSet rs = stmt.executeQuery(SQL); // Process the result
@@ -727,9 +728,10 @@ public class TrainerDashboard extends JFrame{
 
             String SQL = "SELECT member_id, email, join_date, phone, first_name, last_name FROM GymMembers WHERE first_name = '" + fname + "' AND last_name = '" + lname + "'";
             ResultSet rs = stmt.executeQuery(SQL); // Process the result
-            Integer member_id = rs.getInt("member_id");
-            memID = member_id;
+            memID = 0;
             while(rs.next()){
+                Integer member_id = rs.getInt("member_id");
+                memID = member_id;
                 String email = rs.getString("email");
                 String joinDate = rs.getDate("join_date").toString();
                 String phone = rs.getString("phone");
@@ -784,14 +786,6 @@ public class TrainerDashboard extends JFrame{
     }
 
     public static void main(String[] args) {
-
-//        String url = "jdbc:postgresql://localhost:5432/COMP3005";
-//        String user = "postgres";
-//        String password = "TFERPLGK";
-
-
-
-
 
         try {
                 Class.forName("org.postgresql.Driver");
