@@ -29,9 +29,7 @@ INSERT INTO ClassMembers
 VALUES(1, 1);
 
 INSERT INTO PrivateSessions(member_id, trainer_id, set_routine, start_time, session_date)
-VALUES(1, 1, 'Strength', '12:00', '2024-04-16'),
-      (1, 2, 'Flexibility', '11:00', '2024-04-14'),
-      (1, 1, 'Balance', '9:00', '2024-04-17');
+VALUES(1, 1, 'Strength', '12:00', '2024-04-16');
 
 INSERT INTO TrainerAvailability
 VALUES(1, '2024-04-15', '9:00', '14:00'),
