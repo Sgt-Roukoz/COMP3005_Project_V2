@@ -1,3 +1,6 @@
+/**
+ * Dialog class for member routine selection
+ */
 package org.group68;
 
 import javax.swing.*;
@@ -24,6 +27,11 @@ public class MemberRoutineSelect extends JDialog {
     private DefaultTableModel routinesModel;
     private int memberID;
 
+    /**
+     * Constructor for RoutineSelect
+     * @param memberID id of member selecting
+     * @param databaseConnection connection to the database
+     */
     public MemberRoutineSelect(int memberID, Connection databaseConnection) {
         this.databaseConnection = databaseConnection;
         this.memberID = memberID;
@@ -76,6 +84,9 @@ public class MemberRoutineSelect extends JDialog {
         setVisible(true);
     }
 
+    /**
+     * Sets up search feature of routines table
+     */
     private void setUpSearch()
     {
         TableRowSorter<TableModel> rowSorter
@@ -121,6 +132,9 @@ public class MemberRoutineSelect extends JDialog {
         });
     }
 
+    /**
+     * Function triggers when OK button is pressed, sends an update to the database
+     */
     private void onOK() {
         try {
             Statement setRoutine = databaseConnection.createStatement();
@@ -135,10 +149,16 @@ public class MemberRoutineSelect extends JDialog {
         dispose();
     }
 
+    /**
+     * Triggers on cancel button, disposes of window
+     */
     private void onCancel() {
         dispose();
     }
 
+    /**
+     * Populates routines table
+     */
     private void getRoutines()
     {
         try{

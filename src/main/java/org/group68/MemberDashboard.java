@@ -1,3 +1,12 @@
+/**
+ * The Member dashboard, to be used by Fitness Club Members.
+ * It allows members to manage goals and achievements, book private sessions and group classes
+ * set routines, log metrics, and view bills.
+ *
+ * @author Marwan Zeid
+ * @version 04/13/2024
+ */
+
 package org.group68;
 
 import com.github.weisj.darklaf.LafManager;
@@ -6,7 +15,6 @@ import com.github.weisj.darklaf.theme.DarculaTheme;
 import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
-import javax.swing.plaf.nimbus.State;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -102,6 +110,11 @@ public class MemberDashboard extends JFrame {
     private int memberID;
 
 
+    /**
+     * Member dashboard constructor, takes a member id and database connection object to grab member information
+     * @param databaseConnection connection to the database
+     * @param memberID the member's ID
+     */
     public MemberDashboard(Connection databaseConnection, int memberID) {
         this.databaseConnection = databaseConnection;
         this.memberID = memberID;
@@ -132,6 +145,7 @@ public class MemberDashboard extends JFrame {
         setVisible(true);
         setResizable(false);
 
+        //apply achievement changes (checking that achievement has been checked)
         achievementApply.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -139,6 +153,7 @@ public class MemberDashboard extends JFrame {
             }
         });
 
+        //resets achievements table (retrieves them again)
         achievementReset.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -146,6 +161,7 @@ public class MemberDashboard extends JFrame {
             }
         });
 
+        //selects classes, prints class info into the fields below it
         classSelector.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -159,6 +175,7 @@ public class MemberDashboard extends JFrame {
             }
         });
 
+        //every time a day is seleccted, run the Getavailabletrainers function (if timeselector is valid)
         sessionDaySelector.addActionListener(e -> {
             JComboBox<String> cb = (JComboBox<String>) e.getSource();
             String daySelected = (String) cb.getSelectedItem();
@@ -171,6 +188,7 @@ public class MemberDashboard extends JFrame {
 
         });
 
+        //every time a time is selected for session time, run the Getavailabletrainers function (if dayselector is valid)
         sessionTimeSelector.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -181,6 +199,7 @@ public class MemberDashboard extends JFrame {
             }
         });
 
+        //cancel selected class
         cancelClass.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -193,6 +212,8 @@ public class MemberDashboard extends JFrame {
                 if (selectedOption == 0) removeMemberFromClass(Integer.parseInt((String) upcomingClasses.getModel().getValueAt(selectedRow, 0)));
             }
         });
+
+        //join selected class
         joinClassButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -203,6 +224,7 @@ public class MemberDashboard extends JFrame {
             }
         });
 
+        //book a private session
         privateSessionBook.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -220,6 +242,7 @@ public class MemberDashboard extends JFrame {
             }
         });
 
+        //add specific routine to the dashboard (opens the routine selector)
         addRoutine.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -228,6 +251,7 @@ public class MemberDashboard extends JFrame {
             }
         });
 
+        //change password
         changePasswordButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -235,6 +259,7 @@ public class MemberDashboard extends JFrame {
             }
         });
 
+        //reschedule a selected session
         rescheduleSession.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -247,6 +272,7 @@ public class MemberDashboard extends JFrame {
             }
         });
 
+        // cancel a selected session (button is disabled until a session is selected)
         cancelSession.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -272,6 +298,7 @@ public class MemberDashboard extends JFrame {
             }
         });
 
+        //Logs the inputted metrics
         logButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -487,7 +514,7 @@ public class MemberDashboard extends JFrame {
             }
         });
 
-        //change password button
+        //changes current password with new password, check if password is valid (new != old, new is confirmed)
         changePasswordButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -1012,8 +1039,7 @@ public class MemberDashboard extends JFrame {
         upcomingClasses.setDefaultEditor(Object.class, editor);
         upcomingSessions.setDefaultEditor(Object.class, editor);
 
-        //upcomingClasses.c
-
+        /* make the cancel button enabled if a class is selected */
         upcomingClasses.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -1021,6 +1047,7 @@ public class MemberDashboard extends JFrame {
             }
         });
 
+        /* make the session cancel and session reschedule buttons enabled if a session is selected */
         upcomingSessions.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(ListSelectionEvent e) {
@@ -1195,10 +1222,13 @@ public class MemberDashboard extends JFrame {
             routineSet.close();
             getRoutineId.close();
         } catch (SQLException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
         }
     }
 
+    /**
+     * Sets up Bills table
+     */
     protected void setUpBills()
     {
         billmodel = new DefaultTableModel();
@@ -1216,6 +1246,9 @@ public class MemberDashboard extends JFrame {
         getBills();
     }
 
+    /**
+     * Populates bills table
+     */
     protected void getBills()
     {
         billmodel.setRowCount(0);
@@ -1245,10 +1278,6 @@ public class MemberDashboard extends JFrame {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
-    }
-
-    public static void main(String[] args) {
-
     }
 
 }

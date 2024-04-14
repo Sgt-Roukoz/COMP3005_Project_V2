@@ -1,3 +1,6 @@
+/**
+ * Dialog class for member rescheduling sessions
+ */
 package org.group68;
 
 import net.time4j.ClockUnit;
