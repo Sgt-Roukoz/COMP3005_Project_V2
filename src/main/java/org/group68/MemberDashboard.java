@@ -303,6 +303,8 @@ public class MemberDashboard extends JFrame {
                 else logStatus.setText("Values invalid");
             }
         });
+
+        //adds a goal (achievement) to the database
         addGoal.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -310,6 +312,7 @@ public class MemberDashboard extends JFrame {
             }
         });
 
+        //removes a selected goal (achievement) from the database
         removeGoal.addActionListener(new ActionListener() { //remove selected goal
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -336,6 +339,7 @@ public class MemberDashboard extends JFrame {
             }
         });
 
+        //Adds and edits goals (achievements) in the database
         applyGoals.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -388,16 +392,20 @@ public class MemberDashboard extends JFrame {
                 }
             }
         });
+
+        //resets achievement table (pulls from sql)
         resetButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 setUpAchievements();
             }
         });
+
+        //change user email
         changeEmailButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String email = emailField.getText().toString();
+                String email = emailField.getText().toString(); //check if email is valid
                 String emailregex = "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|" +
                         "\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\" +
                         "x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]" +
