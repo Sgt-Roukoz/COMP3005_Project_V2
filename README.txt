@@ -46,7 +46,7 @@ it on the left side of the IDE). Using the username and password you took note o
 username and password respectively. Next, to run this application you either click the Green arrow button next to the main
 method of the Main class or pressing Shift+F10. This will run the login page of the app.
 
-Video Demo: https://www.youtube.com/watch?v=sGG-0x3KN4o
+Video Demo: https://youtu.be/0ruEAHdmh-4
 
 The following resources are from third parties:
 Blood Pressure Icon:
