@@ -56,6 +56,7 @@ public class LoginPage extends JFrame{
         emptyFieldsError.setVisible(false);
         registryFieldsError.setVisible(false);
         success.setVisible(false);
+        savedSucc.setVisible(false);
         LafManager.setTheme(new DarculaTheme());
         LafManager.install();
 
